@@ -1,4 +1,4 @@
-# qm-demos
+# demo-qm
 
 Prototipos para QM Equipment, hechos por Rober Palestini. Es una demo independiente, no un sitio oficial de QM.
 
@@ -19,7 +19,7 @@ Las demos 1 a 3 son archivos HTML sueltos: se abren directo en el navegador. `in
 3. En la EC2:
 
 ```bash
-git clone <url-del-repo> qm-demos && cd qm-demos
+git clone https://github.com/roberpalestini97-code/demo-qm.git && cd demo-qm
 bash deploy/setup-ec2.sh
 ```
 
