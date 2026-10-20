@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QM · Demos</title>
+<style>
+:root{--bg:#0e1116;--card:#171b22;--ink:#e8ebf0;--muted:#9aa3b2;--line:#2a303a;--acc:#38bdf8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,"Segoe UI",sans-serif}
+main{max-width:1040px;margin:auto;padding:36px 16px 48px}
+h1{font-size:30px;margin:0 0 6px}.lead{color:var(--muted);max-width:720px;margin:0 0 28px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+a.card{display:block;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;color:inherit;text-decoration:none}
+a.card:hover{border-color:var(--acc)}
+.n{color:var(--acc);font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+h2{font-size:18px;margin:6px 0}.card p{color:var(--muted);margin:0}
+.tag{display:inline-block;margin-top:10px;font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 8px}
+footer{color:var(--muted);font-size:13px;margin-top:32px;border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Demos para QM Equipment</h1>
+  <p class="lead">Prototipos sobre los equipos de QM: dos herramientas comerciales con datos reales de Vaca Muerta y una plataforma de telemetría de punta a punta con un agente de mantenimiento. Los datos de las bombas son simulados.</p>
+  <div class="grid">
+    <a class="card" href="1_calculadora_combustible.html"><div class="n">Demo 1</div><h2>Calculadora de combustible</h2>
+      <p>Gasoil, bi-fuel, gas y turbina con la actividad de fractura real de cada operadora: ahorro, CO₂ y repago.</p><span class="tag">Datos abiertos · Secretaría de Energía</span></a>
+    <a class="card" href="3_configurador_bomba.html"><div class="n">Demo 2</div><h2>Configurador de bomba</h2>
+      <p>Motor, transmisión, bomba y combustible, con la curva de presión y caudal, la ficha técnica en PDF y el pedido de cotización.</p><span class="tag">Un solo archivo HTML</span></a>
+    <a class="card" href="4_dashboard_flota.html"><div class="n">Demo 3</div><h2>Flota simulada</h2>
+      <p>Un set de 8 bombas en el navegador, con las horas del fluid end y alertas de mantenimiento.</p><span class="tag">Sin servidor</span></a>
+    <a class="card" href="consola/"><div class="n">Demo 4</div><h2>Telemetría en vivo con IA agéntica</h2>
+      <p>El data van publica por MQTT y los datos se guardan en TimescaleDB. Un agente con Claude propone órdenes de mantenimiento, que aprueba un técnico. Se pueden inyectar fallas y cortar el enlace satelital.</p><span class="tag">MQTT · TimescaleDB · Claude · MCP</span></a>
+    <a class="card" href="grafana/d/qm-flota"><div class="n">Demo 4</div><h2>Tablero en Grafana</h2>
+      <p>Presión, temperatura, vibración, aceite, sustitución de gas y caudal por vuelta de cada bomba, en tiempo real.</p><span class="tag">Grafana</span></a>
+    <a class="card" href="2_canva_propuesta_demos.pdf"><div class="n">Resumen</div><h2>Propuesta en PDF</h2>
+      <p>Qué vimos en los videos de QM, las demos y dónde está la actividad de fractura por operadora.</p><span class="tag">10 páginas</span></a>
+  </div>
+  <footer>Demo independiente de Rober Palestini · no es un sitio oficial de QM Equipment. Las cifras de los equipos son supuestos a validar.</footer>
+</main>
+<script src="nav.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# Una sola entrada para todas las demos. Con SITE_ADDRESS=<ip>.sslip.io, Caddy saca el certificado HTTPS solo.
+{$SITE_ADDRESS::80} {
+	encode gzip
+
+	# La consola puede inyectar fallas y disparar el agente: va con usuario y contraseña. Grafana también.
+	@privado path /consola /consola/* /grafana /grafana/*
+	basic_auth @privado {
+		{$DEMO_USER} {$DEMO_PASSWORD_HASH}
+	}
+
+	redir /consola /consola/
+	handle_path /consola/* {
+		reverse_proxy api:8000
+	}
+	handle /grafana* {
+		reverse_proxy grafana:3000 {
+			header_up -Authorization
+		}
+	}
+	handle {
+		root * /srv
+		file_server
+	}
+}

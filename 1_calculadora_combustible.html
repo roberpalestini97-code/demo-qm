@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora Diésel vs Gas | DEMO: ROBER PALESTINI PARA QM EQUIPMENT</title>
+<style>
+:root{
+  --bg:#f4f5f7; --card:#ffffff; --ink:#14181f; --muted:#5b6472; --line:#dde1e7;
+  --accent:#c8102e; --diesel:#6b7280; --bifuel:#d97706; --gas:#0f766e; --turb:#2563eb;
+  --good:#15803d; --shadow:0 1px 2px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1116; --card:#171b22; --ink:#e8ebf0; --muted:#9aa3b2; --line:#2a303a;
+    --accent:#ef4444; --diesel:#9ca3af; --bifuel:#f59e0b; --gas:#14b8a6; --turb:#60a5fa;
+    --good:#22c55e; --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1116; --card:#171b22; --ink:#e8ebf0; --muted:#9aa3b2; --line:#2a303a;
+  --accent:#ef4444; --diesel:#9ca3af; --bifuel:#f59e0b; --gas:#14b8a6; --turb:#60a5fa;
+  --good:#22c55e; --shadow:none;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:28px 16px 8px;max-width:1150px;margin:auto}
+header .tag{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h1{margin:6px 0 4px;font-size:clamp(22px,3.2vw,32px)}
+header p{margin:0;color:var(--muted);max-width:720px}
+main{max-width:1150px;margin:auto;padding:16px;display:grid;grid-template-columns:340px 1fr;gap:20px}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
+h2{font-size:14px;margin:0 0 12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+.row{display:flex;gap:8px;align-items:center}
+select,input[type=number]{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:15px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.unit{font-size:12px;color:var(--muted);white-space:nowrap;min-width:70px}
+details{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+summary{cursor:pointer;font-size:13px;font-weight:600}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:640px){.grid4{grid-template-columns:repeat(2,1fr)}}
+.opt{border:1px solid var(--line);border-radius:10px;padding:12px;position:relative;overflow:hidden}
+.opt::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--c)}
+.opt h3{margin:4px 0 8px;font-size:14px}
+.opt .big{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.opt .sm{font-size:12px;color:var(--muted)}
+.opt .save{color:var(--good);font-weight:600;font-size:13px;margin-top:6px}
+.opt.best{outline:2px solid var(--good)}
+.badge{position:absolute;top:8px;right:8px;background:var(--good);color:#fff;font-size:10px;padding:2px 6px;border-radius:99px;font-weight:700}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
+th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{font-size:12px;color:var(--muted);font-weight:600}
+.bars{display:grid;gap:10px;margin-top:6px}
+.bar{display:grid;grid-template-columns:110px 1fr 110px;gap:10px;align-items:center;font-size:13px}
+.bar .track{background:var(--bg);border-radius:6px;height:22px;overflow:hidden}
+.bar .fill{height:100%;border-radius:6px;transition:width .35s}
+.bar .v{text-align:right;font-variant-numeric:tabular-nums}
+.stack{display:grid;gap:20px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:640px){.kpis{grid-template-columns:1fr}}
+.kpi .l{font-size:12px;color:var(--muted)}
+.kpi .n{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}
+.note{font-size:12px;color:var(--muted)}
+button.theme{position:fixed;top:12px;right:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:6px 10px;cursor:pointer}
+footer{max-width:1150px;margin:0 auto;padding:0 16px 30px}
+</style>
+</head>
+<body>
+<button class="theme" onclick="toggleTheme()" title="Cambiar tema">◐</button>
+<header>
+  <div class="tag">Demo · QM Equipment | DEMO POR ROBER PALESTINI PARA QM EQUIPMENT</div>
+  <h1>Diésel vs bi-fuel vs gas vs turbina</h1>
+  <p>Cuánto se ahorra en combustible, cuánto CO₂ se evita y en cuánto tiempo se repaga la conversión de un set de fractura.</p>
+</header>
+
+<main>
+  <section class="card" aria-label="Datos de la operación">
+    <h2>Datos oficiales</h2>
+    <label for="perfil">Cargar actividad real de fractura</label>
+    <select id="perfil"></select>
+    <p class="note" id="perfilNote" style="margin:6px 0 0"></p>
+
+    <h2 style="margin-top:20px">Operación</h2>
+    <label for="etapas">Etapas por pozo</label>
+    <div class="row"><input type="number" id="etapas" value="52" min="1"><span class="unit">etapas</span></div>
+    <label for="horas">Horas de bombeo por etapa</label>
+    <div class="row"><input type="number" id="horas" value="2.5" min="0.1" step="0.1"><span class="unit">h</span></div>
+    <label for="hhp">Potencia hidráulica del set</label>
+    <div class="row"><input type="number" id="hhp" value="40000" min="1000" step="1000"><span class="unit">HHP</span></div>
+    <label for="carga">Factor de carga promedio: <b id="cargaV">70%</b></label>
+    <input type="range" id="carga" min="30" max="100" value="70">
+    <label for="pozos">Pozos por mes</label>
+    <div class="row"><input type="number" id="pozos" value="4" min="0.5" step="0.5"><span class="unit">pozos/mes</span></div>
+
+    <h2 style="margin-top:20px">Precios</h2>
+    <label for="pdiesel">Gasoil</label>
+    <div class="row"><input type="number" id="pdiesel" value="1.65" step="0.01"><span class="unit">USD / litro</span></div>
+    <p class="note" style="margin:4px 0 0">Mediana de gasoil grado 2 en surtidor en Neuquén: $2.499/L (12 estaciones, del 29/09 al 12/10/2026) al A3500 $1.514,57 (16/10/2026). Es precio minorista: una operadora suele comprar más barato.</p>
+    <label for="pgas">Gas natural</label>
+    <div class="row"><input type="number" id="pgas" value="3.5" step="0.1"><span class="unit">USD / MMBTU</span></div>
+    <p class="note" style="margin:4px 0 0">Supuesto: precio de gas en boca de pozo (validar con QM o la operadora).</p>
+
+    <details>
+      <summary>Inversión de conversión (repago)</summary>
+      <label for="pxset">Pozos que fractura un set por mes</label>
+      <div class="row"><input type="number" id="pxset" value="4" min="0.5" step="0.5"><span class="unit">pozos/set</span></div>
+      <p class="note" id="setsNote" style="margin:4px 0 0"></p>
+      <label for="cx_bi">Kit bi-fuel (por set)</label>
+      <div class="row"><input type="number" id="cx_bi" value="1500000" step="50000"><span class="unit">USD</span></div>
+      <label for="cx_gas">Motores 100% gas (incremental por set)</label>
+      <div class="row"><input type="number" id="cx_gas" value="6000000" step="100000"><span class="unit">USD</span></div>
+      <label for="cx_tur">Turbinas (incremental por set)</label>
+      <div class="row"><input type="number" id="cx_tur" value="9000000" step="100000"><span class="unit">USD</span></div>
+    </details>
+    <details>
+      <summary>Supuestos técnicos</summary>
+      <label for="ef_d">Eficiencia térmica diésel</label>
+      <div class="row"><input type="number" id="ef_d" value="38" step="1"><span class="unit">%</span></div>
+      <label for="ef_bi">Eficiencia bi-fuel</label>
+      <div class="row"><input type="number" id="ef_bi" value="36" step="1"><span class="unit">%</span></div>
+      <label for="sust">Sustitución diésel→gas (bi-fuel)</label>
+      <div class="row"><input type="number" id="sust" value="60" step="1"><span class="unit">%</span></div>
+      <label for="ef_g">Eficiencia motor a gas</label>
+      <div class="row"><input type="number" id="ef_g" value="36" step="1"><span class="unit">%</span></div>
+      <label for="ef_t">Eficiencia turbina</label>
+      <div class="row"><input type="number" id="ef_t" value="30" step="1"><span class="unit">%</span></div>
+      <label for="ef_tr">Eficiencia de transmisión y bomba (BHP→HHP)</label>
+      <div class="row"><input type="number" id="ef_tr" value="88" step="1"><span class="unit">%</span></div>
+    </details>
+  </section>
+
+  <div class="stack">
+    <section class="card">
+      <h2>Resultado por pozo</h2>
+      <div class="grid4" id="opts"></div>
+    </section>
+
+    <section class="card">
+      <h2>Mejor alternativa a 12 meses</h2>
+      <div class="kpis">
+        <div class="kpi"><div class="l">Ahorro de combustible / año</div><div class="n" id="kAhorro">–</div></div>
+        <div class="kpi"><div class="l">CO₂ evitado / año</div><div class="n" id="kCo2">–</div></div>
+        <div class="kpi"><div class="l">Repago de la conversión</div><div class="n" id="kRepago">–</div></div>
+      </div>
+      <p class="note" id="kWho"></p>
+    </section>
+
+    <section class="card">
+      <h2>Costo de combustible por año</h2>
+      <div class="bars" id="bars"></div>
+    </section>
+
+    <section class="card">
+      <h2>Detalle anual</h2>
+      <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Tecnología</th><th>Gasoil (m³)</th><th>Gas (miles m³)</th><th>Costo (USD)</th><th>Ahorro (USD)</th><th>CO₂ (t)</th><th>Repago</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      </div>
+    </section>
+  </div>
+</main>
+<footer>
+  <p class="note">Estimación orientativa para una demo comercial. Poder calorífico: gasoil 36 MJ/L, gas 37,3 MJ/m³ (1 MMBTU = 1.055 MJ). Factores de emisión: gasoil 2,68 kg CO₂/L y gas 1,93 kg CO₂/m³. No incluye venteo de metano, logística de GNC ni mantenimiento. Los supuestos técnicos y de inversión hay que validarlos con datos reales de campo.</p>
+  <p class="note"><b>Datos oficiales</b> vía EnergyIA.ar (consultados el 20/10/2026): actividad de fractura de la Secretaría de Energía, «Datos de fractura de pozos de hidrocarburos (Adjunto IV)», CC-BY-4.0; precios en surtidor de la Secretaría de Energía (cobertura baja: 12 estaciones de Neuquén declararon en los últimos 30 días); tipo de cambio A3500 del BCRA.</p>
+</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+const MJ_BHPH = 2.6845;          // 1 bhp·h = 2,6845 MJ
+const LHV_D = 36.0;              // MJ por litro de gasoil
+const LHV_G = 37.3;              // MJ por m³ de gas
+const MJ_MMBTU = 1055.06;
+const CO2_D = 2.68, CO2_G = 1.93;  // kg CO₂ por litro / por m³
+
+const OPTS = [
+  {k:'d',  n:'Diésel',       c:'--diesel'},
+  {k:'bi', n:'Bi-fuel',      c:'--bifuel'},
+  {k:'g',  n:'Gas (motor)',  c:'--gas'},
+  {k:'t',  n:'Turbina a gas',c:'--turb'},
+];
+
+const fmt = (v,d=0) => v.toLocaleString('es-AR',{maximumFractionDigits:d,minimumFractionDigits:d});
+const usd = v => 'USD ' + (Math.abs(v)>=1e6 ? fmt(v/1e6,2)+' M' : fmt(v));
+const num = id => parseFloat($(id).value) || 0;
+
+function calc(){
+  $('cargaV').textContent = $('carga').value + '%';
+  const hhpH = num('hhp') * num('carga')/100 * num('horas') * num('etapas'); // HHP·h por pozo
+  const bhpH = hhpH / (num('ef_tr')/100);
+  const mjOut = bhpH * MJ_BHPH;
+  const pGasM3 = num('pgas') / MJ_MMBTU * LHV_G;   // USD por m³
+  const pD = num('pdiesel');
+  const sust = num('sust')/100;
+
+  const fuel = {
+    d:  {L: mjOut/(num('ef_d')/100)/LHV_D, m3:0},
+    bi: (()=>{const mj = mjOut/(num('ef_bi')/100); return {L: mj*(1-sust)/LHV_D, m3: mj*sust/LHV_G};})(),
+    g:  {L:0, m3: mjOut/(num('ef_g')/100)/LHV_G},
+    t:  {L:0, m3: mjOut/(num('ef_t')/100)/LHV_G},
+  };
+  const sets = Math.max(1, Math.ceil(num('pozos') / Math.max(0.5, num('pxset'))));
+  $('setsNote').textContent = `→ ${sets} set${sets>1?'s':''} de fractura para ${fmt(num('pozos'),1)} pozos/mes. La inversión se multiplica por ${sets}.`;
+  const capex = {d:0, bi:num('cx_bi')*sets, g:num('cx_gas')*sets, t:num('cx_tur')*sets};
+  const pozosAno = num('pozos')*12;
+
+  const res = OPTS.map(o=>{
+    const f = fuel[o.k];
+    const costo = f.L*pD + f.m3*pGasM3;
+    const co2 = (f.L*CO2_D + f.m3*CO2_G)/1000;
+    return {...o, ...f, costo, co2};
+  });
+  const base = res[0];
+  res.forEach(r=>{
+    r.ahorro = base.costo - r.costo;
+    r.co2ev = base.co2 - r.co2;
+    r.ahorroAno = r.ahorro*pozosAno;
+    r.repago = r.k==='d' ? null : (r.ahorroAno>0 ? capex[r.k]/(r.ahorroAno/12) : Infinity);
+  });
+
+  // Mejor alternativa: mayor ahorro neto a 3 años
+  const alt = res.slice(1);
+  const best = alt.reduce((a,b)=> (b.ahorroAno*3-capex[b.k]) > (a.ahorroAno*3-capex[a.k]) ? b : a);
+
+  $('opts').innerHTML = res.map(r=>`
+    <div class="opt ${r===best?'best':''}" style="--c:var(${r.c})">
+      ${r===best?'<span class="badge">MEJOR</span>':''}
+      <h3>${r.n}</h3>
+      <div class="big">${usd(r.costo)}</div>
+      <div class="sm">combustible por pozo</div>
+      <div class="sm">${r.L?fmt(r.L/1000,1)+' m³ gasoil':''}${r.L&&r.m3?' + ':''}${r.m3?fmt(r.m3/1000,0)+' mil m³ gas':''}</div>
+      ${r.k==='d'?'<div class="sm" style="margin-top:6px">Línea base</div>'
+        :`<div class="save">${r.ahorro>=0?'▼ ':'▲ '}${usd(Math.abs(r.ahorro))} (${fmt(r.ahorro/base.costo*100,0)}%)</div>
+          <div class="sm">−${fmt(r.co2ev,0)} t CO₂ por pozo</div>`}
+    </div>`).join('');
+
+  $('kAhorro').textContent = usd(best.ahorroAno);
+  $('kCo2').textContent = fmt(best.co2ev*pozosAno,0) + ' t';
+  $('kRepago').textContent = isFinite(best.repago) ? fmt(best.repago,1)+' meses' : 'no repaga';
+  $('kWho').textContent = `Alternativa con mayor ahorro neto a 3 años: ${best.n}. Equivale a ${fmt(best.co2ev*pozosAno/4.6,0)} autos fuera de circulación por un año (4,6 t CO₂ por auto).`;
+
+  const max = Math.max(...res.map(r=>r.costo*pozosAno));
+  $('bars').innerHTML = res.map(r=>`
+    <div class="bar"><span>${r.n}</span>
+      <div class="track"><div class="fill" style="width:${r.costo*pozosAno/max*100}%;background:var(${r.c})"></div></div>
+      <span class="v">${usd(r.costo*pozosAno)}</span></div>`).join('');
+
+  $('tbody').innerHTML = res.map(r=>`<tr>
+    <td>${r.n}</td><td>${fmt(r.L*pozosAno/1000,0)}</td><td>${fmt(r.m3*pozosAno/1000,0)}</td>
+    <td>${usd(r.costo*pozosAno)}</td><td>${r.k==='d'?'–':usd(r.ahorroAno)}</td>
+    <td>${fmt(r.co2*pozosAno,0)}</td>
+    <td>${r.repago===null?'–':isFinite(r.repago)?fmt(r.repago,1)+' m':'no'}</td></tr>`).join('');
+}
+
+function toggleTheme(){
+  const r = document.documentElement;
+  const dark = r.dataset.theme ? r.dataset.theme==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme = dark ? 'light' : 'dark';
+}
+// Actividad de fractura real. Fuente: Secretaría de Energía, "Datos de fractura de pozos
+// de hidrocarburos (Adjunto IV)", vía EnergyIA.ar. 12 meses cerrados: abr-2025 a mar-2026.
+const PERFILES = [
+  {k:'cuenca',   n:'Toda la cuenca Neuquina', pozos:477, etapas:24610},
+  {k:'ypf',      n:'YPF',                     pozos:234, etapas:13235},
+  {k:'vista',    n:'Vista Energy',            pozos:56,  etapas:2890},
+  {k:'pampa',    n:'Pampa Energía',           pozos:43,  etapas:1854},
+  {k:'plus',     n:'Pluspetrol',              pozos:33,  etapas:1638},
+  {k:'pae',      n:'Pan American Energy',     pozos:29,  etapas:1419},
+  {k:'shell',    n:'Shell Argentina',         pozos:17,  etapas:663},
+  {k:'chevron',  n:'Chevron Argentina',       pozos:12,  etapas:599},
+  {k:'manual',   n:'Supuestos manuales'},
+];
+$('perfil').innerHTML = PERFILES.map(p=>`<option value="${p.k}">${p.n}</option>`).join('');
+function aplicarPerfil(){
+  const p = PERFILES.find(x=>x.k===$('perfil').value);
+  if(!p.pozos){ $('perfilNote').textContent = 'Cargá los valores a mano.'; return calc(); }
+  $('etapas').value = Math.round(p.etapas/p.pozos);
+  $('pozos').value = (p.pozos/12).toFixed(1);
+  $('perfilNote').innerHTML = `${p.n}: <b>${fmt(p.pozos)} pozos</b> y <b>${fmt(p.etapas)} etapas</b> fracturadas en 12 meses (abr-2025 a mar-2026). Fuente: Secretaría de Energía (Adjunto IV), vía EnergyIA.ar.`;
+  calc();
+}
+$('perfil').addEventListener('change', aplicarPerfil);
+document.querySelectorAll('input').forEach(i=>i.addEventListener('input',()=>{
+  if(['etapas','pozos'].includes(i.id)) { $('perfil').value='manual'; $('perfilNote').textContent='Valores editados a mano.'; }
+  calc();
+}));
+aplicarPerfil();
+</script>
+<script src="nav.js" defer></script>
+</body>
+</html>

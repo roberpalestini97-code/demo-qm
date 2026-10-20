@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 340" font-family="Segoe UI, Arial, sans-serif">
+  <rect width="800" height="340" fill="#eef1f5"/>
+  <rect x="40" y="228" width="700" height="18" fill="#2b2f36"/>
+  <rect x="610" y="200" width="150" height="30" fill="#2b2f36"/>
+  <g fill="#1b1d21"><circle cx="560" cy="262" r="26"/><circle cx="620" cy="262" r="26"/><circle cx="680" cy="262" r="26"/></g>
+  <g fill="#8a9099"><circle cx="560" cy="262" r="10"/><circle cx="620" cy="262" r="10"/><circle cx="680" cy="262" r="10"/></g>
+  <rect x="80" y="246" width="10" height="40" fill="#2b2f36"/><rect x="66" y="284" width="38" height="8" fill="#2b2f36"/>
+  <!-- turbine enclosure -->
+  <rect x="60" y="100" width="290" height="128" rx="8" fill="#0f766e"/>
+  <rect x="80" y="78" width="60" height="26" fill="#0b5a54"/>
+  <rect x="270" y="56" width="50" height="48" rx="4" fill="#555b64"/>
+  <g stroke="#0b5a54" stroke-width="3"><line x1="160" y1="120" x2="160" y2="210"/><line x1="180" y1="120" x2="180" y2="210"/><line x1="200" y1="120" x2="200" y2="210"/></g>
+  <ellipse cx="270" cy="164" rx="40" ry="40" fill="#14b8a6" opacity=".35"/>
+  <!-- reduction gearbox -->
+  <rect x="360" y="132" width="90" height="96" rx="6" fill="#3d434c"/>
+  <rect x="450" y="170" width="30" height="18" fill="#8a9099"/>
+  <!-- pump (bigger) -->
+  <rect x="480" y="112" width="140" height="116" rx="6" fill="#d9dde3" stroke="#2b2f36" stroke-width="3"/>
+  <rect x="620" y="132" width="66" height="76" rx="4" fill="#9aa1ab" stroke="#2b2f36" stroke-width="3"/>
+  <g fill="#2b2f36"><rect x="630" y="140" width="46" height="9"/><rect x="630" y="155" width="46" height="9"/><rect x="630" y="170" width="46" height="9"/><rect x="630" y="185" width="46" height="9"/></g>
+  <path d="M686 170 h50 v-40 h20" stroke="#2b2f36" stroke-width="10" fill="none"/>
+  <text x="40" y="36" font-size="22" font-weight="700" fill="#14181f">Prometheus 5000 · Turbina a gas</text>
+  <text x="40" y="58" font-size="13" fill="#5b6472">Ilustración esquemática · turbina · caja reductora · bomba quintuplex</text>
+  <g font-size="12" fill="#14181f" text-anchor="middle">
+    <text x="205" y="320">Turbina (GNC / gas de campo)</text><text x="405" y="320">Reductora</text><text x="580" y="320">Bomba</text>
+  </g>
+</svg>

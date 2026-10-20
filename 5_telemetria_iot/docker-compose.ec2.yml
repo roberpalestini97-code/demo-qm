@@ -1,0 +1,43 @@
+# Override para la EC2: solo Caddy queda expuesto (80/443); base, MQTT, API y Grafana quedan en la red interna.
+# docker compose -f docker-compose.yml -f docker-compose.ec2.yml up -d --build
+services:
+  mosquitto:
+    ports: !reset []
+  timescaledb:
+    ports: !reset []
+  api:
+    ports: !reset []
+    environment:
+      GRAFANA_URL: /grafana/d/qm-flota
+  grafana:
+    ports: !reset []
+    environment:
+      GF_SERVER_ROOT_URL: ${PUBLIC_URL}/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_AUTH_BASIC_ENABLED: "false"
+      GF_SECURITY_ADMIN_PASSWORD: ${DEMO_PASSWORD}
+
+  caddy:
+    image: caddy:2.8.4-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+      DEMO_USER: ${DEMO_USER:-qm}
+      DEMO_PASSWORD_HASH: ${DEMO_PASSWORD_HASH}
+    volumes:
+      - ../deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Solo se publican las demos, nunca el resto del repo.
+      - ../index.html:/srv/index.html:ro
+      - ../nav.js:/srv/nav.js:ro
+      - ../1_calculadora_combustible.html:/srv/1_calculadora_combustible.html:ro
+      - ../2_canva_propuesta_demos.pdf:/srv/2_canva_propuesta_demos.pdf:ro
+      - ../3_configurador_bomba.html:/srv/3_configurador_bomba.html:ro
+      - ../3_configurador_assets:/srv/3_configurador_assets:ro
+      - ../4_dashboard_flota.html:/srv/4_dashboard_flota.html:ro
+      - caddy_data:/data
+    depends_on: [api, grafana]
+    deploy: { resources: { limits: { memory: 64m } } }
+
+volumes:
+  caddy_data:

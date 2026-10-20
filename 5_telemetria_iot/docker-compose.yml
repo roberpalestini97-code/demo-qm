@@ -1,0 +1,93 @@
+name: qm-telemetria
+
+x-app: &app
+  build: ./app
+  image: qm-telemetria-app
+  restart: unless-stopped
+  environment: &env
+    SET_ID: SET-01
+    DATABASE_URL: postgresql://qm:qm@timescaledb:5432/telemetria
+    MQTT_HOST: mosquitto
+    MQTT_PORT: "1883"
+    SAMPLE_SECONDS: ${SAMPLE_SECONDS:-5}
+    AGENT_INTERVAL: ${AGENT_INTERVAL:-120}
+    ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    AGENT_MODEL: ${AGENT_MODEL:-claude-sonnet-5-5}
+    SUMMARY_MODEL: ${SUMMARY_MODEL:-claude-haiku-5-5}
+    GRAFANA_URL: http://localhost:3000/d/qm-flota
+  depends_on:
+    timescaledb: { condition: service_healthy }
+    mosquitto: { condition: service_started }
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0.20
+    restart: unless-stopped
+    ports: ["1883:1883"]
+    volumes: ["./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro"]
+
+  timescaledb:
+    image: timescale/timescaledb:2.17.2-pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: qm
+      POSTGRES_PASSWORD: qm
+      POSTGRES_DB: telemetria
+    # Memoria acotada, como en una t3.micro de la capa gratuita (1 GB para base + Grafana).
+    command: postgres -c shared_buffers=128MB -c work_mem=8MB -c max_connections=40 -c timescaledb.max_background_workers=4
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/001_schema.sql:/docker-entrypoint-initdb.d/100_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qm -d telemetria"]
+      interval: 5s
+      retries: 20
+    deploy: { resources: { limits: { memory: 512m } } }
+
+  simulator:
+    <<: *app
+    command: python -m qm.simulator
+    environment: { <<: *env, BUFFER_PATH: /data/outbox.sqlite }
+    volumes: ["buffer:/data"]
+
+  ingest:
+    <<: *app
+    command: python -m qm.ingest_mqtt
+
+  agent:
+    <<: *app
+    command: python -m qm.agent_loop
+
+  api:
+    <<: *app
+    command: uvicorn qm.api:app --host 0.0.0.0 --port 8000
+    ports: ["8000:8000"]
+
+  grafana:
+    image: grafana/grafana-oss:11.3.0
+    restart: unless-stopped
+    ports: ["3000:3000"]
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/flota.json
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      timescaledb: { condition: service_healthy }
+    deploy: { resources: { limits: { memory: 256m } } }
+
+  # Servidor MCP para Claude Desktop (stdio). No arranca con "up"; ver README.
+  mcp:
+    <<: *app
+    profiles: ["mcp"]
+    restart: "no"
+    command: python -m qm.mcp_server
+    stdin_open: true
+
+volumes:
+  pgdata:
+  buffer:

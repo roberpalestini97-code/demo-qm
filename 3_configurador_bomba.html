@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configurador de Bomba</title>
+<style>
+:root{
+  --bg:#f4f5f7; --card:#fff; --ink:#14181f; --muted:#5b6472; --line:#dde1e7;
+  --accent:#c8102e; --curve:#2563eb; --ok:#15803d; --warn:#b45309; --grid:#e6e9ee;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#0e1116;--card:#171b22;--ink:#e8ebf0;--muted:#9aa3b2;--line:#2a303a;--accent:#ef4444;--curve:#60a5fa;--ok:#22c55e;--warn:#f59e0b;--grid:#232831}
+}
+:root[data-theme="dark"]{--bg:#0e1116;--card:#171b22;--ink:#e8ebf0;--muted:#9aa3b2;--line:#2a303a;--accent:#ef4444;--curve:#60a5fa;--ok:#22c55e;--warn:#f59e0b;--grid:#232831}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{max-width:1200px;margin:auto;padding:28px 16px 8px}
+.tag{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h1{margin:6px 0 4px;font-size:clamp(22px,3.2vw,32px)}
+header p{margin:0;color:var(--muted)}
+main{max-width:1200px;margin:auto;padding:16px;display:grid;grid-template-columns:330px 1fr;gap:20px}
+@media (max-width:920px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+h2{font-size:13px;margin:0 0 12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.step{margin-bottom:16px}
+.step .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;margin-right:6px}
+.step b{font-size:14px}
+.choices{display:grid;gap:6px;margin-top:8px}
+.choice{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer}
+.choice:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.choice input{margin-top:3px;accent-color:var(--accent)}
+.choice small{display:block;color:var(--muted);font-size:12px}
+.choice.dis{opacity:.4;pointer-events:none}
+.stack{display:grid;gap:20px;min-width:0}
+.hero{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;align-items:center}
+@media (max-width:700px){.hero{grid-template-columns:1fr}}
+.hero img{width:100%;border-radius:8px;border:1px solid var(--line);background:#eef1f5}
+.specs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.spec .l{font-size:12px;color:var(--muted)}
+.spec .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.alerts{margin-top:10px;display:grid;gap:6px}
+.alert{font-size:13px;padding:8px 10px;border-radius:8px;border-left:4px solid var(--warn);background:color-mix(in srgb,var(--warn) 10%,transparent)}
+.alert.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,transparent)}
+svg text{fill:var(--muted);font-size:11px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px}
+.op{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-top:10px}
+.op label{font-size:12px;color:var(--muted);display:block}
+input[type=number],input[type=text],input[type=email],textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+.op input{width:120px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:0;border-radius:8px;padding:10px 14px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;font-size:14px}
+.btn.p{background:var(--accent);color:#fff}
+.btn.s{background:transparent;border:1px solid var(--line);color:var(--ink)}
+form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+form .full{grid-column:1/-1}
+form label{font-size:12px;color:var(--muted)}
+@media (max-width:600px){form{grid-template-columns:1fr}}
+#ok{display:none;margin-top:12px;padding:12px;border-radius:8px;background:color-mix(in srgb,var(--ok) 12%,transparent);font-size:14px;white-space:pre-line}
+button.theme{position:fixed;top:12px;right:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:6px 10px;cursor:pointer}
+.note{font-size:12px;color:var(--muted)}
+/* Ficha imprimible */
+#ficha{display:none}
+@media print{
+  body{background:#fff;color:#000}
+  header,main,button.theme,footer{display:none!important}
+  #ficha{display:block;font:12px/1.4 Arial,sans-serif;color:#000}
+  #ficha h1{font-size:22px;margin:0}
+  #ficha table{width:100%;border-collapse:collapse;margin-top:10px}
+  #ficha td{border-bottom:1px solid #ccc;padding:6px}
+  #ficha td:first-child{color:#555;width:40%}
+  #ficha img{width:100%;margin:10px 0}
+  #ficha svg text{fill:#333}
+  @page{size:A4;margin:16mm}
+}
+</style>
+</head>
+<body>
+<button class="theme" onclick="toggleTheme()" title="Cambiar tema">◐</button>
+<header>
+  <div class="tag">Demo · QM Equipment</div>
+  <h1>Configurador de bomba de fractura</h1>
+  <p>Elegí el motor, la transmisión, la bomba y el combustible. La curva de presión y caudal se actualiza al instante.</p>
+</header>
+
+<main>
+  <section class="card" aria-label="Configuración">
+    <div class="step"><span class="n">1</span><b>Bomba</b><div class="choices" id="c_pump"></div></div>
+    <div class="step"><span class="n">2</span><b>Diámetro de pistón</b><div class="choices" id="c_plunger"></div></div>
+    <div class="step"><span class="n">3</span><b>Motor</b><div class="choices" id="c_motor"></div></div>
+    <div class="step"><span class="n">4</span><b>Transmisión</b><div class="choices" id="c_trans"></div></div>
+    <div class="step"><span class="n">5</span><b>Combustible</b><div class="choices" id="c_fuel"></div></div>
+  </section>
+
+  <div class="stack">
+    <section class="card">
+      <div class="hero">
+        <img id="img" alt="Esquema de la unidad seleccionada">
+        <div>
+          <h2 id="uname">–</h2>
+          <div class="specs">
+            <div class="spec"><div class="l">Potencia hidráulica</div><div class="v" id="s_hhp">–</div></div>
+            <div class="spec"><div class="l">Presión máxima</div><div class="v" id="s_p">–</div></div>
+            <div class="spec"><div class="l">Caudal máximo</div><div class="v" id="s_q">–</div></div>
+            <div class="spec"><div class="l">Caudal a presión máxima</div><div class="v" id="s_qp">–</div></div>
+          </div>
+          <div class="alerts" id="alerts"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Curva presión vs caudal</h2>
+      <div id="chart"></div>
+      <div class="legend"><span><i style="background:var(--curve)"></i>Envolvente de la configuración</span><span><i style="background:var(--accent);height:10px;width:10px;border-radius:50%"></i>Punto de operación</span></div>
+      <div class="op">
+        <div><label for="opQ">Caudal objetivo (BPM)</label><input type="number" id="opQ" value="12" step="0.5"></div>
+        <div><label for="opP">Presión objetivo (psi)</label><input type="number" id="opP" value="8500" step="100"></div>
+        <div id="opRes" class="note"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Ficha técnica</h2>
+      <div class="btns">
+        <button class="btn p" onclick="window.print()">Generar PDF de esta configuración</button>
+        <a class="btn s" id="pdfBase" target="_blank">Descargar ficha del modelo base (PDF)</a>
+      </div>
+      <p class="note">El primer botón abre la impresión del navegador: elegí "Guardar como PDF".</p>
+    </section>
+
+    <section class="card">
+      <h2>Pedir cotización</h2>
+      <form id="quote">
+        <div><label for="q_n">Nombre</label><input type="text" id="q_n" required></div>
+        <div><label for="q_e">Empresa</label><input type="text" id="q_e" required></div>
+        <div><label for="q_m">Email</label><input type="email" id="q_m" required></div>
+        <div><label for="q_c">Cantidad de unidades</label><input type="number" id="q_c" value="1" min="1"></div>
+        <div class="full"><label for="q_t">Comentarios (yacimiento, plazo, etc.)</label><textarea id="q_t" rows="3"></textarea></div>
+        <div class="full btns"><button class="btn p" type="submit">Generar solicitud</button></div>
+      </form>
+      <div id="ok"></div>
+    </section>
+  </div>
+</main>
+
+<div id="ficha"></div>
+
+<script>
+const ASSETS = '3_configurador_assets/';
+const PUMPS = {
+  qem3000: {name:'SPM QEM 3000 · quintuplex', rating:3000, stroke:8, rpm:330, rod:250000, plungers:[4,4.5,5], unit:'Seawolf 3000', img:'img/seawolf3000.svg', pdf:'pdf/seawolf3000.pdf'},
+  q5000:   {name:'Quintuplex 5000 HP · carrera 11"', rating:5000, stroke:11, rpm:300, rod:340000, plungers:[4.5,5,5.5], unit:'Prometheus 5000', img:'img/prometheus5000.svg', pdf:'pdf/prometheus5000.pdf'},
+};
+const MOTORS = {
+  qsk60: {name:'Cummins QSK60', sub:'Diésel · 3.000 bhp', bhp:3000, fuels:['diesel','bifuel'], trans:['td']},
+  turb:  {name:'Turbina a gas', sub:'5.600 shp · arranque rápido', bhp:5600, fuels:['gnc','campo','diesel'], trans:['red']},
+  elec:  {name:'Motor eléctrico', sub:'5.000 hp · velocidad variable', bhp:5000, fuels:['red','genset'], trans:['red']},
+};
+const TRANS = {
+  td:  {name:'Twin Disc powershift', sub:'7 velocidades · η 0,90', eff:0.90},
+  red: {name:'Caja reductora', sub:'Relación fija · η 0,97', eff:0.97},
+};
+const FUELS = {
+  diesel:{name:'Gasoil', sub:'Línea base'},
+  bifuel:{name:'Bi-fuel (gasoil + gas)', sub:'Hasta 70% de sustitución'},
+  gnc:{name:'GNC', sub:'Menor costo y emisiones'},
+  campo:{name:'Gas de campo', sub:'Requiere acondicionamiento'},
+  red:{name:'Red eléctrica', sub:'Sin emisiones en locación'},
+  genset:{name:'Genset a gas', sub:'Generación en sitio'},
+};
+const st = {pump:'qem3000', plunger:4.5, motor:'qsk60', trans:'td', fuel:'diesel'};
+const $ = id => document.getElementById(id);
+const fmt = (v,d=0)=>v.toLocaleString('es-AR',{maximumFractionDigits:d,minimumFractionDigits:d});
+
+function radio(group, items, cur, disabled=[]){
+  $( 'c_'+group ).innerHTML = Object.entries(items).map(([k,o])=>`
+    <label class="choice ${disabled.includes(k)?'dis':''}"><input type="radio" name="${group}" value="${k}" ${k==cur?'checked':''}>
+    <span>${o.name}<small>${o.sub||''}</small></span></label>`).join('');
+}
+
+function perf(){
+  const p = PUMPS[st.pump], m = MOTORS[st.motor], t = TRANS[st.trans];
+  const area = Math.PI/4*st.plunger**2;
+  const pmax = Math.min(15000, p.rod/area);
+  const galRev = 5*area*p.stroke/231;
+  const qmax = galRev*p.rpm/42;
+  const hhpMotor = m.bhp*t.eff;
+  const hhp = Math.min(hhpMotor, p.rating);
+  const qAtP = hhp*40.8/pmax;
+  return {p,m,t,area,pmax,qmax,hhp,hhpMotor,qAtP};
+}
+
+function render(){
+  const m = MOTORS[st.motor];
+  if(!m.trans.includes(st.trans)) st.trans = m.trans[0];
+  if(!m.fuels.includes(st.fuel)) st.fuel = m.fuels[0];
+  if(!PUMPS[st.pump].plungers.includes(st.plunger)) st.plunger = PUMPS[st.pump].plungers[1];
+
+  radio('pump', Object.fromEntries(Object.entries(PUMPS).map(([k,o])=>[k,{name:o.name,sub:`${fmt(o.rating)} HP · ${o.unit}`}])), st.pump);
+  radio('plunger', Object.fromEntries(PUMPS[st.pump].plungers.map(d=>[d.toFixed(1),{name:d.toString().replace('.',',')+'"',sub:''}])), st.plunger);
+  radio('motor', MOTORS, st.motor);
+  radio('trans', TRANS, st.trans, Object.keys(TRANS).filter(k=>!m.trans.includes(k)));
+  radio('fuel', Object.fromEntries(m.fuels.map(k=>[k,FUELS[k]])), st.fuel);
+
+  const r = perf();
+  $('img').src = ASSETS + r.p.img;
+  $('pdfBase').href = ASSETS + r.p.pdf;
+  $('uname').textContent = `${r.p.unit} · ${m.name} · ${FUELS[st.fuel].name}`;
+  $('s_hhp').textContent = fmt(r.hhp)+' HHP';
+  $('s_p').textContent = fmt(r.pmax)+' psi';
+  $('s_q').textContent = fmt(r.qmax,1)+' BPM';
+  $('s_qp').textContent = fmt(Math.min(r.qAtP,r.qmax),1)+' BPM';
+
+  const al = [];
+  if(r.hhpMotor < r.p.rating*0.95) al.push(['warn',`El motor entrega ${fmt(r.hhpMotor)} HHP y la bomba admite ${fmt(r.p.rating)}: la bomba queda subutilizada.`]);
+  if(r.hhpMotor > r.p.rating*1.05) al.push(['warn',`El motor (${fmt(r.hhpMotor)} HHP) supera la capacidad de la bomba: se limita a ${fmt(r.p.rating)} HHP.`]);
+  if(!al.length) al.push(['ok','Motor y bomba bien balanceados.']);
+  if(st.fuel==='campo') al.push(['warn','El gas de campo requiere un skid de acondicionamiento (no incluido).']);
+  $('alerts').innerHTML = al.map(([c,t])=>`<div class="alert ${c==='ok'?'ok':''}">${t}</div>`).join('');
+
+  $('chart').innerHTML = chart(r);
+  opCheck(r);
+  ficha(r);
+}
+
+function curvePts(r){
+  const pts=[];
+  for(let i=0;i<=60;i++){
+    const q = 0.5 + (r.qmax-0.5)*i/60;
+    pts.push([q, Math.min(r.pmax, r.hhp*40.8/q)]);
+  }
+  return pts;
+}
+
+function chart(r, w=720, h=300){
+  const pad={l:56,r:16,t:12,b:36};
+  const X = q => pad.l + q/36*(w-pad.l-pad.r);
+  const Y = p => h-pad.b - p/16000*(h-pad.t-pad.b);
+  let g='';
+  for(let p=0;p<=16000;p+=4000) g+=`<line x1="${pad.l}" x2="${w-pad.r}" y1="${Y(p)}" y2="${Y(p)}" stroke="var(--grid)"/><text x="${pad.l-6}" y="${Y(p)+4}" text-anchor="end">${fmt(p)}</text>`;
+  for(let q=0;q<=36;q+=6) g+=`<text x="${X(q)}" y="${h-pad.b+16}" text-anchor="middle">${q}</text>`;
+  const pts = curvePts(r);
+  const d = pts.map((p,i)=>(i?'L':'M')+X(p[0]).toFixed(1)+' '+Y(p[1]).toFixed(1)).join(' ');
+  const area = d + ` L${X(r.qmax)} ${Y(0)} L${X(0.5)} ${Y(0)} Z`;
+  const oq = parseFloat($('opQ').value)||0, op = parseFloat($('opP').value)||0;
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Curva de presión vs caudal">
+    ${g}
+    <text x="${(w+pad.l)/2}" y="${h-4}" text-anchor="middle">Caudal (BPM)</text>
+    <text x="12" y="${h/2}" transform="rotate(-90 12 ${h/2})" text-anchor="middle">Presión (psi)</text>
+    <path d="${area}" fill="var(--curve)" opacity=".12"/>
+    <path d="${d}" fill="none" stroke="var(--curve)" stroke-width="2.5"/>
+    <circle cx="${X(oq)}" cy="${Y(op)}" r="6" fill="var(--accent)" stroke="var(--card)" stroke-width="2"/>
+  </svg>`;
+}
+
+function opCheck(r){
+  const q = parseFloat($('opQ').value)||0, p = parseFloat($('opP').value)||0;
+  const need = p*q/40.8;
+  const ok = q<=r.qmax && p<=r.pmax && need<=r.hhp;
+  $('opRes').innerHTML = ok
+    ? `<span style="color:var(--ok);font-weight:600">✔ Dentro de la envolvente</span> · usa ${fmt(need)} HHP (${fmt(need/r.hhp*100)}% de carga)`
+    : `<span style="color:var(--accent);font-weight:600">✖ Fuera de la envolvente</span> · requiere ${fmt(need)} HHP`;
+}
+
+function ficha(r){
+  const m = r.m;
+  $('ficha').innerHTML = `
+    <h1>Ficha técnica · ${r.p.unit}</h1>
+    <div style="color:#555">Configuración generada el ${new Date().toLocaleDateString('es-AR')} · Demo QM Equipment</div>
+    <img src="${ASSETS + r.p.img}" alt="">
+    <table>
+      <tr><td>Bomba</td><td>${r.p.name}</td></tr>
+      <tr><td>Diámetro de pistón</td><td>${String(st.plunger).replace('.',',')}"</td></tr>
+      <tr><td>Motor</td><td>${m.name} (${m.sub})</td></tr>
+      <tr><td>Transmisión</td><td>${r.t.name} (${r.t.sub})</td></tr>
+      <tr><td>Combustible</td><td>${FUELS[st.fuel].name}</td></tr>
+      <tr><td>Potencia hidráulica</td><td>${fmt(r.hhp)} HHP</td></tr>
+      <tr><td>Presión máxima</td><td>${fmt(r.pmax)} psi</td></tr>
+      <tr><td>Caudal máximo</td><td>${fmt(r.qmax,1)} BPM</td></tr>
+    </table>
+    <div style="margin-top:14px">${chart(r,700,260)}</div>
+    <p style="color:#555;font-size:10px">Valores ilustrativos para demostración. No constituyen especificación de fabricante.</p>`;
+}
+
+document.addEventListener('change', e=>{
+  const n = e.target.name;
+  if(!n) return;
+  st[n] = n==='plunger' ? parseFloat(e.target.value) : e.target.value;
+  render();
+});
+['opQ','opP'].forEach(id=>$(id).addEventListener('input',()=>{const r=perf();$('chart').innerHTML=chart(r);opCheck(r);}));
+
+$('quote').addEventListener('submit', e=>{
+  e.preventDefault();
+  const r = perf();
+  const txt = `Solicitud de cotización
+${$('q_n').value} · ${$('q_e').value} · ${$('q_m').value}
+${$('q_c').value} × ${r.p.unit}: ${r.p.name}, pistón ${st.plunger}", ${r.m.name}, ${r.t.name}, ${FUELS[st.fuel].name}
+${fmt(r.hhp)} HHP · ${fmt(r.pmax)} psi · ${fmt(r.qmax,1)} BPM
+Comentarios: ${$('q_t').value || '—'}`;
+  const ok = $('ok');
+  ok.style.display='block';
+  ok.innerHTML = '';
+  ok.append(txt, document.createElement('br'));
+  const a = document.createElement('a');
+  a.className='btn s'; a.style.marginTop='10px';
+  a.textContent='Abrir en mi correo';
+  a.href='mailto:?subject='+encodeURIComponent('Cotización '+r.p.unit)+'&body='+encodeURIComponent(txt);
+  ok.append(a);
+});
+
+function toggleTheme(){
+  const r=document.documentElement;
+  const dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme=dark?'light':'dark';
+}
+// Preselección por URL: #cfg=bomba,piston,motor,transmision,combustible
+const cfg = (location.hash.match(/cfg=([^&]+)/)||[])[1];
+if(cfg){ const [pump,plunger,motor,trans,fuel] = decodeURIComponent(cfg).split(','); Object.assign(st,{pump,plunger:parseFloat(plunger),motor,trans,fuel}); }
+render();
+</script>
+<script src="nav.js" defer></script>
+</body>
+</html>

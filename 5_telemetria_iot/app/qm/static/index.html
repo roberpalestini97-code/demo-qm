@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Consola de flota</title>
+<style>
+:root{--bg:#0e1116;--card:#171b22;--ink:#e8ebf0;--muted:#9aa3b2;--line:#2a303a;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--acc:#38bdf8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,"Segoe UI",sans-serif;padding:20px 16px;max-width:1280px;margin:auto}
+h1{margin:0;font-size:22px}h2{font-size:15px;margin:0 0 10px}
+.sub{color:var(--muted);margin:4px 0 16px}.sub a{color:var(--acc)}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:14px}@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.k{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.k .l{color:var(--muted);font-size:12px}.k .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:720px}
+th,td{padding:8px;border-bottom:1px solid var(--line);text-align:right}th{color:var(--muted);font-size:12px;font-weight:600}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+.warn{color:var(--warn)}.bad{color:var(--bad)}
+.pill{padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.p-alta{background:#ef444422;color:var(--bad)}.p-media{background:#f59e0b22;color:var(--warn)}.p-baja{background:#38bdf822;color:var(--acc)}
+.e-propuesta{background:#9aa3b222;color:var(--ink)}.e-aprobada{background:#22c55e22;color:var(--ok)}.e-cerrada,.e-rechazada{background:#2a303a;color:var(--muted)}
+button,select{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;cursor:pointer}
+button:hover{border-color:var(--acc)}button.pri{background:var(--acc);color:#04121c;border-color:var(--acc);font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.orden{border-top:1px solid var(--line);padding:10px 0}.orden:first-child{border-top:0}
+.orden .t{font-weight:600}.orden p{margin:4px 0;color:var(--muted)}.orden b{color:var(--ink)}
+.muted{color:var(--muted);font-size:12px}pre{white-space:pre-wrap;margin:0;font:13px/1.5 inherit}
+.empty{color:var(--muted);padding:6px 0}
+</style>
+</head>
+<body>
+<h1>Set de fractura · consola de mantenimiento</h1>
+<div class="sub"><span id="meta">cargando…</span> · <a id="graf" target="_blank" rel="noopener">abrir Grafana</a></div>
+
+<div class="kpis">
+  <div class="k"><div class="l">Presión media</div><div class="v" id="kp">–</div></div>
+  <div class="k"><div class="l">Caudal total</div><div class="v" id="kq">–</div></div>
+  <div class="k"><div class="l">HHP total</div><div class="v" id="kh">–</div></div>
+  <div class="k"><div class="l">Gasoil</div><div class="v" id="kd">–</div></div>
+  <div class="k"><div class="l">Gas</div><div class="v" id="kg">–</div></div>
+  <div class="k"><div class="l">Órdenes abiertas</div><div class="v" id="ko">–</div></div>
+</div>
+
+<div class="grid">
+<div>
+  <div class="card"><h2>Bombas</h2><div class="wrap"><table>
+    <thead><tr><th>Bomba</th><th>Combustible</th><th>psi</th><th>BPM</th><th>HHP</th><th>Temp. PE</th><th>Aceite</th><th>Vibración</th><th>Sust. gas</th><th>Horas FE</th></tr></thead>
+    <tbody id="tb"><tr><td colspan="10" class="empty">Esperando telemetría…</td></tr></tbody></table></div>
+  </div>
+  <div class="card"><h2>Órdenes de mantenimiento</h2><div id="ordenes" class="empty">Sin órdenes todavía.</div></div>
+</div>
+<div>
+  <div class="card"><h2>Simular en campo</h2>
+    <div class="row"><select id="bomba"></select><select id="falla"></select></div>
+    <div class="row"><button class="pri" onclick="inyectar()">Inyectar falla</button><button onclick="reparar()">Reparar bomba</button></div>
+    <div class="row"><button onclick="cortar()">Cortar enlace satelital 60 s</button></div>
+    <div class="muted">Las fallas evolucionan en 2 a 3 minutos. Durante el corte, el data van guarda los mensajes y los reenvía al volver.</div>
+  </div>
+  <div class="card"><h2>Agente</h2>
+    <div class="row"><button class="pri" onclick="agente()">Revisar ahora</button><span class="muted" id="modo"></span></div>
+    <div id="corridas" class="muted">Sin corridas.</div>
+  </div>
+  <div class="card"><h2>Parte del día</h2>
+    <div class="row"><button onclick="parte()">Generar parte</button></div>
+    <pre id="parte" class="muted"></pre>
+  </div>
+</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const nf=(v,d=0)=>v==null?'–':Number(v).toLocaleString('es-AR',{maximumFractionDigits:d,minimumFractionDigits:d});
+const api=(path,opt={})=>fetch(path,{headers:{'Content-Type':'application/json'},...opt}).then(async r=>{if(!r.ok)throw new Error(await r.text());return r.json()});
+const post=(path,body={})=>api(path,{method:'POST',body:JSON.stringify(body)});
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let abiertas={};
+
+async function init(){
+  const c=await api('api/config');
+  $('meta').textContent=`${c.set} · agente en modo ${c.modo==='llm'?'Claude ('+c.modelo+')':'reglas (sin clave de API)'}`;
+  $('graf').href=c.grafana;
+  $('falla').innerHTML=Object.entries(c.fallas).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join('');
+  $('bomba').innerHTML=Array.from({length:8},(_,i)=>`<option>FP-${String(i+1).padStart(2,'0')}</option>`).join('');
+  refresh();setInterval(refresh,5000);
+}
+
+async function refresh(){
+  const [f,o,cr]=await Promise.all([api('api/flota'),api('api/ordenes'),api('api/corridas')]).catch(()=>[[],[],[]]);
+  const ab=o.filter(x=>x.estado==='propuesta'||x.estado==='aprobada');
+  abiertas={};ab.forEach(x=>(abiertas[x.pump_id]??=[]).push(x));
+  const s=k=>f.reduce((a,p)=>a+(p[k]||0),0);
+  $('kp').textContent=f.length?nf(s('pressure_psi')/f.length)+' psi':'–';
+  $('kq').textContent=nf(s('rate_bpm'),1)+' BPM';$('kh').textContent=nf(s('hhp'));
+  $('kd').textContent=nf(s('diesel_lph'))+' L/h';$('kg').textContent=nf(s('gas_m3h'))+' m³/h';$('ko').textContent=ab.length;
+  if(f.length)$('tb').innerHTML=f.map(p=>`<tr>
+    <td><b>${p.pump_id}</b>${(abiertas[p.pump_id]||[]).map(x=>` <span class="pill p-${x.prioridad}">${esc(x.componente)}</span>`).join('')}</td>
+    <td>${p.fuel}</td><td>${nf(p.pressure_psi)}</td><td>${nf(p.rate_bpm,1)}</td><td>${nf(p.hhp)}</td>
+    <td class="${p.power_end_temp_c>92?'bad':p.power_end_temp_c>85?'warn':''}">${nf(p.power_end_temp_c,1)} °C</td>
+    <td class="${p.lube_oil_psi<45?'bad':p.lube_oil_psi<55?'warn':''}">${nf(p.lube_oil_psi,1)} psi</td>
+    <td class="${p.vibration_mm_s>7?'bad':p.vibration_mm_s>5?'warn':''}">${nf(p.vibration_mm_s,1)} mm/s</td>
+    <td class="${p.fuel==='bi-fuel'&&p.gas_subst_pct<40?'bad':''}">${p.fuel==='bi-fuel'?nf(p.gas_subst_pct)+' %':'–'}</td>
+    <td class="${p.fluid_end_hours>1400?'warn':''}">${nf(p.fluid_end_hours)} h</td></tr>`).join('');
+  $('ordenes').innerHTML=o.length?o.slice(0,20).map(x=>`<div class="orden">
+    <div class="row" style="margin:0"><span class="t">#${x.id} · ${x.pump_id} · ${esc(x.componente)}</span>
+      <span class="pill p-${x.prioridad}">${x.prioridad}</span><span class="pill e-${x.estado}">${x.estado}</span>
+      <span class="muted">${new Date(x.created_at).toLocaleTimeString('es-AR')} · ${x.creada_por}</span></div>
+    <p>${esc(x.motivo)}</p><p><b>Acción:</b> ${esc(x.accion_recomendada)}</p>
+    <div class="row" style="margin:0">${x.estado==='propuesta'?`<button onclick="rev(${x.id},'aprobar')">Aprobar</button><button onclick="rev(${x.id},'rechazar')">Rechazar</button>`:''}
+      ${x.estado==='propuesta'||x.estado==='aprobada'?`<button onclick="rev(${x.id},'cerrar')">Cerrar · trabajo hecho</button>`:''}</div></div>`).join(''):'Sin órdenes todavía.';
+  $('corridas').innerHTML=cr.length?cr.slice(0,5).map(c=>`<div class="orden">
+    <b>${new Date(c.started_at).toLocaleTimeString('es-AR')}</b> · ${c.modo} · ${(c.candidatos||[]).length} candidatos · ${(c.acciones||[]).length} acciones
+    ${c.modo==='llm'?` · ${nf(c.input_tokens)}+${nf(c.output_tokens)} tokens · US$ ${nf(c.costo_usd,4)}`:''}
+    ${c.error?`<div class="bad">${esc(c.error)}</div>`:''}</div>`).join(''):'Sin corridas.';
+}
+
+async function act(p){try{await p;await refresh()}catch(e){alert(e.message)}}
+const inyectar=()=>act(post('api/fallas',{bomba:$('bomba').value,tipo:$('falla').value}));
+const reparar=()=>act(post('api/fallas',{bomba:$('bomba').value,tipo:null}));
+const cortar=()=>act(post('api/enlace',{segundos:60}));
+const rev=(id,a)=>act(post(`api/ordenes/${id}/${a}`,{usuario:'técnico demo'}));
+async function agente(){$('modo').textContent='revisando…';await act(post('api/agente'));$('modo').textContent=''}
+async function parte(){$('parte').textContent='generando…';try{const r=await post('api/resumen');$('parte').textContent=r.texto}catch(e){$('parte').textContent=e.message}}
+init();
+</script>
+<script src="/nav.js" defer></script>
+</body>
+</html>

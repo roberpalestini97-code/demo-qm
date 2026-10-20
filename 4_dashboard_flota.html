@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flota de Fractura</title>
+<style>
+:root{--bg:#0e1116;--card:#171b22;--ink:#e8ebf0;--muted:#9aa3b2;--line:#2a303a;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,"Segoe UI",sans-serif;padding:20px 16px}
+h1{margin:0;font-size:22px}
+.sub{color:var(--muted);margin:4px 0 16px}
+.live{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bad);margin-right:6px;animation:b 1s infinite}
+@keyframes b{50%{opacity:.2}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.k{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}
+.k .l{color:var(--muted);font-size:12px}.k .v{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:760px}
+th,td{padding:10px;border-bottom:1px solid var(--line);text-align:right}
+th{color:var(--muted);font-size:12px;font-weight:600}
+th:first-child,td:first-child{text-align:left}
+.pill{padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600}
+.ok{background:#22c55e22;color:var(--ok)}.warn{background:#f59e0b22;color:var(--warn)}.bad{background:#ef444422;color:var(--bad)}
+.bar{height:6px;background:var(--line);border-radius:3px;margin-top:4px}.bar i{display:block;height:100%;border-radius:3px}
+button{margin-top:14px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer}
+.note{color:var(--muted);font-size:12px;margin-top:10px}
+</style>
+</head>
+<body>
+<h1>Set de fractura · Pozo demo</h1>
+<div class="sub"><span class="live"></span>Simulación en tiempo real · etapa <b id="etapa">12</b> de 50</div>
+
+<div class="kpis">
+  <div class="k"><div class="l">Presión de tratamiento</div><div class="v" id="kp">–</div></div>
+  <div class="k"><div class="l">Caudal total</div><div class="v" id="kq">–</div></div>
+  <div class="k"><div class="l">HHP total</div><div class="v" id="kh">–</div></div>
+  <div class="k"><div class="l">Gasoil (L/h)</div><div class="v" id="kd">–</div></div>
+  <div class="k"><div class="l">Gas (m³/h)</div><div class="v" id="kg">–</div></div>
+</div>
+
+<div class="wrap">
+<table>
+  <thead><tr><th>Bomba</th><th>Combustible</th><th>Presión (psi)</th><th>Caudal (BPM)</th><th>HHP</th><th>Consumo</th><th>Temp. power end</th><th>Horas fluid end</th><th>Mantenimiento</th></tr></thead>
+  <tbody id="tb"></tbody>
+</table>
+</div>
+<button onclick="falla()">Simular falla en una bomba</button>
+<p class="note">Datos simulados. Predicción simple: horas restantes = (vida útil del fluid end − horas acumuladas), ajustada por temperatura del power end.</p>
+
+<script>
+const VIDA = 1500; // h de vida útil estimada del fluid end
+const pumps = Array.from({length:8},(_,i)=>({
+  id:'FP-'+String(i+1).padStart(2,'0'),
+  fuel: i<4?'Diésel':'Bi-fuel',
+  q: 10, temp: 70+Math.random()*10, horas: 300+Math.random()*1100, extra:0
+}));
+const fmt=(v,d=0)=>v.toLocaleString('es-AR',{maximumFractionDigits:d,minimumFractionDigits:d});
+const j=(v,a)=>v+(Math.random()-.5)*a;
+let P=9200;
+
+function tick(){
+  P = Math.max(8000,Math.min(10500,j(P,250)));
+  let Q=0,H=0,D=0,G=0;
+  const rows = pumps.map(p=>{
+    p.q = Math.max(6,Math.min(13,j(p.q,.6)));
+    p.temp = Math.max(60,Math.min(110,j(p.temp,1.5)+p.extra));
+    p.horas += 0.05;
+    const hhp = P*p.q/40.8;
+    const lph = hhp*0.24;               // L/h gasoil equivalentes
+    const d = p.fuel==='Diésel'?lph:lph*0.4, g = p.fuel==='Diésel'?0:lph*0.6*0.97;
+    Q+=p.q;H+=hhp;D+=d;G+=g;
+    const factor = p.temp>95?0.5:p.temp>85?0.8:1;
+    const rest = Math.max(0,(VIDA-p.horas)*factor);
+    const est = rest<100||p.temp>95?'bad':rest<300||p.temp>85?'warn':'ok';
+    const txt = est==='bad'?'Intervenir ya':est==='warn'?`En ~${fmt(rest)} h`:`OK · ${fmt(rest)} h`;
+    const pct = Math.min(100,p.horas/VIDA*100);
+    return `<tr><td><b>${p.id}</b></td><td>${p.fuel}</td><td>${fmt(P)}</td><td>${fmt(p.q,1)}</td><td>${fmt(hhp)}</td>
+      <td>${fmt(d)} L/h${g?` + ${fmt(g)} m³/h`:''}</td>
+      <td style="color:var(--${p.temp>95?'bad':p.temp>85?'warn':'ink'})">${fmt(p.temp,1)} °C</td>
+      <td>${fmt(p.horas)} h<div class="bar"><i style="width:${pct}%;background:var(--${est==='ok'?'ok':est==='warn'?'warn':'bad'})"></i></div></td>
+      <td><span class="pill ${est}">${txt}</span></td></tr>`;
+  });
+  document.getElementById('tb').innerHTML=rows.join('');
+  kp.textContent=fmt(P)+' psi'; kq.textContent=fmt(Q,1)+' BPM'; kh.textContent=fmt(H);
+  kd.textContent=fmt(D); kg.textContent=fmt(G);
+}
+function falla(){const p=pumps[Math.floor(Math.random()*pumps.length)];p.extra=1.2;setTimeout(()=>p.extra=0,15000);}
+setInterval(()=>{const e=document.getElementById('etapa');if(Math.random()<.02)e.textContent=Math.min(50,+e.textContent+1);},1000);
+tick(); setInterval(tick,1000);
+</script>
+<script src="nav.js" defer></script>
+</body>
+</html>

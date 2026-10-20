@@ -1,0 +1,9 @@
+# Material personal: no va al repo
+carta_presentacion_QM.*
+QM_Equipment_analisis.md
+
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
