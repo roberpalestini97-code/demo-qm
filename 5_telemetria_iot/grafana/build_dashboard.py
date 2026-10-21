@@ -21,7 +21,7 @@ def stat(i, title, sql, unit, x, decimals=0):
 def series(i, title, column, unit, x, y, thresholds=None, where=""):
     sql = (f"SELECT time_bucket('$__interval', time) AS time, pump_id AS metric, avg({column}) AS value "
            f"FROM telemetria WHERE $__timeFilter(time) {where} GROUP BY 1, 2 ORDER BY 1")
-    defaults = {"unit": unit, "custom": {"lineWidth": 2, "showPoints": "never"}}
+    defaults = {"unit": unit, "custom": {"lineWidth": 2, "showPoints": "never", "insertNulls": 60000}}
     if thresholds:
         defaults["thresholds"] = {"mode": "absolute", "steps": [{"color": "transparent", "value": None},
                                                                  {"color": "red", "value": thresholds}]}

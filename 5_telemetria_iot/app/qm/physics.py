@@ -51,7 +51,7 @@ class Pump:
 
     def repair(self, componente=None):
         self.fault, self.fault_t = None, 0.0
-        if componente and componente.startswith("fluid end"):
+        if componente == "fluid end":  # cambio completo; válvulas o packing no reinician las horas
             self.hours = 0.0
 
     def step(self, set_pressure, dt):

@@ -335,7 +335,8 @@
           "unit": "psi",
           "custom": {
             "lineWidth": 2,
-            "showPoints": "never"
+            "showPoints": "never",
+            "insertNulls": 60000
           }
         },
         "overrides": []
@@ -384,6 +385,7 @@
           "custom": {
             "lineWidth": 2,
             "showPoints": "never",
+            "insertNulls": 60000,
             "thresholdsStyle": {
               "mode": "dashed"
             }
@@ -448,6 +450,7 @@
           "custom": {
             "lineWidth": 2,
             "showPoints": "never",
+            "insertNulls": 60000,
             "thresholdsStyle": {
               "mode": "dashed"
             }
@@ -512,6 +515,7 @@
           "custom": {
             "lineWidth": 2,
             "showPoints": "never",
+            "insertNulls": 60000,
             "thresholdsStyle": {
               "mode": "dashed"
             }
@@ -576,6 +580,7 @@
           "custom": {
             "lineWidth": 2,
             "showPoints": "never",
+            "insertNulls": 60000,
             "thresholdsStyle": {
               "mode": "dashed"
             }
@@ -639,7 +644,8 @@
           "unit": "none",
           "custom": {
             "lineWidth": 2,
-            "showPoints": "never"
+            "showPoints": "never",
+            "insertNulls": 60000
           }
         },
         "overrides": []

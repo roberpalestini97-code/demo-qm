@@ -116,6 +116,10 @@ def test_comando_de_falla_y_reparacion():
     msg.payload = json.dumps({"accion": "reparar", "bomba": "FP-06", "componente": "fluid end"})
     van.on_command(None, None, msg)
     assert van.set.pump("FP-06").hours == 0
+    horas = van.set.pump("FP-04").hours
+    msg.payload = json.dumps({"accion": "reparar", "bomba": "FP-04", "componente": "fluid end · válvulas"})
+    van.on_command(None, None, msg)
+    assert van.set.pump("FP-04").hours == horas
 
 
 def test_modo_reglas_arma_la_orden(monkeypatch):
