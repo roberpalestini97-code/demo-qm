@@ -10,6 +10,7 @@ new QmDemosStack(app, 'QmDemos', {
   instanceType: ctx('instanceType', 't3.small')!,
   repoUrl: ctx('repoUrl', 'https://github.com/roberpalestini97-code/demo-qm.git')!,
   branch: ctx('branch', 'main')!,
+  setId: ctx('setId', 'SET-01')!,
   alertEmail: ctx('alertEmail'),
   description: 'Demos de QM Equipment: EC2 con Docker, acceso por SSM',
 });

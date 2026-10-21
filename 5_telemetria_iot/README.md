@@ -5,8 +5,8 @@ Un set de fractura simulado (8 bombas QEM 3000 con QSK60, 4 diésel y 4 bi-fuel)
 Corre entero en Docker. Cada pieza local tiene su reemplazo directo en la capa gratuita de AWS (ver al final).
 
 ```
- simulador (data van) ──MQTT──► Mosquitto ──► ingesta ──► TimescaleDB ◄── Grafana :3000
-   buffer offline SQLite          (IoT Core)   (SQS+Lambda)    │
+ simulador (data van) ──MQTT──► Mosquitto ──► iot-rule ──► ElasticMQ ──► ingest-lambda ──► TimescaleDB ◄── Grafana :3000
+   buffer offline SQLite        (IoT Core)  (regla IoT)    (SQS + DLQ)   (Lambda)            │
         ▲                                                       ├──► detector (reglas SQL) ──► agente Claude ──► órdenes "propuesta"
         └──── comandos: fallas, reparación, corte de enlace ◄── consola :8000 ◄─┘                     │
                                                                  servidor MCP ◄── Claude Desktop ─────┘
@@ -35,7 +35,7 @@ docker compose up -d --build
 - Grafana: http://localhost:3000 (anónimo de solo lectura; admin/admin para editar)
 - Base: `postgresql://qm:qm@localhost:5432/telemetria`
 
-Para ver qué pasa: `docker compose logs -f simulator ingest agent`. Para borrar todo, datos incluidos: `docker compose down -v`.
+Para ver qué pasa: `docker compose logs -f simulator iot-rule ingest-lambda agent`. La cola se ve en http://localhost:9325 (consola de ElasticMQ). Para borrar todo, datos incluidos: `docker compose down -v`.
 
 ## Guion de demo (5 minutos)
 
@@ -79,7 +79,10 @@ cd app && python -m pytest -q
 |---|---|
 | `app/qm/physics.py` | Modelo del set y de las 5 fallas |
 | `app/qm/simulator.py` | Data van: publica, escucha comandos, guarda en buffer cuando no hay enlace |
-| `app/qm/ingest.py` | Mensaje → filas. Lo comparten `ingest_mqtt.py` (local) y `lambda_ingest.py` (AWS) |
+| `app/qm/ingest.py` | Mensaje → filas |
+| `app/qm/lambda_ingest.py` | Handler de la Lambda (SQS → TimescaleDB), con `batchItemFailures` |
+| `app/qm/local_aws.py` | Equivalentes locales: la regla de IoT (MQTT → SQS) y el event source mapping (SQS → handler) |
+| `sqs/elasticmq.conf` | Colas `telemetria` y `telemetria-dlq`, iguales a las del CDK |
 | `app/qm/detector.py` | Reglas SQL |
 | `app/qm/agent.py` | Agente con tool use; `handler` para Lambda |
 | `app/qm/tools.py` | Herramientas sobre la base (agente, API y MCP) |
@@ -93,10 +96,10 @@ cd app && python -m pytest -q
 
 | Local | AWS | Capa gratuita |
 |---|---|---|
-| Mosquitto | **IoT Core** (thing + certificado X.509 + política) | Cuentas con el free tier de 12 meses: 500 mil mensajes y 250 mil reglas por mes |
-| `ingest_mqtt.py` | **Regla de IoT → SQS → Lambda** `qm.lambda_ingest.handler` | SQS y Lambda: 1 millón por mes, siempre gratis |
+| `mosquitto` | **IoT Core** (thing + certificado X.509 + política) | Cuentas con el free tier de 12 meses: 500 mil mensajes y 250 mil reglas por mes |
+| `iot-rule` + `sqs` + `ingest-lambda` | **Regla de IoT → SQS (+ DLQ) → Lambda** `qm.lambda_ingest.handler`, el mismo código | SQS y Lambda: 1 millón por mes, siempre gratis |
 | `agent_loop.py` | **EventBridge Scheduler → Lambda** `qm.agent.handler` | Gratis a este volumen |
-| TimescaleDB + Grafana + consola | **EC2 t3.micro o t4g.micro** con este mismo compose, sin Mosquitto ni ingesta | 750 h por mes, con 30 GB de EBS |
+| TimescaleDB + Grafana + consola | **EC2 t3.micro o t4g.micro** con este mismo compose más `docker-compose.aws.yml`, que apaga los equivalentes locales | 750 h por mes, con 30 GB de EBS |
 | Simulador | Mi PC o la misma EC2, apuntando a IoT Core por el puerto 8883 | — |
 
 **Para no salir de la capa gratuita:**
@@ -106,4 +109,4 @@ cd app && python -m pytest -q
 - La API de Claude no es parte de AWS. Con el modo reglas el costo es cero.
 - AWS cambió la capa gratuita en julio de 2025: las cuentas nuevas reciben créditos y un plan gratuito de 6 meses en lugar de los 12 meses. Revisar qué aplica a tu cuenta antes de desplegar.
 
-**Próxima etapa:** carpeta `infra/` con Terraform para todo lo de arriba, más GitHub Actions para tests y deploy.
+Todo lo de la tabla, salvo el agente en Lambda, ya está en el CDK de [`../infra`](../infra/README.md). El agente sigue en la EC2 porque necesita salida a internet para la API de Claude, y una Lambda en la VPC no la tiene sin NAT. El certificado del data van se genera dentro de la EC2 al arrancar: la clave privada nunca sale de la instancia.

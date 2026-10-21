@@ -1,5 +1,8 @@
 name: qm-telemetria
 
+# Local, con el mismo camino que en AWS:
+#   simulador ─MQTT─► mosquitto (≈ IoT Core) ─► iot-rule (≈ regla de IoT) ─► sqs (ElasticMQ ≈ SQS)
+#             ─► ingest-lambda (≈ Lambda, mismo handler) ─► timescaledb
 x-app: &app
   build: ./app
   image: qm-telemetria-app
@@ -7,8 +10,15 @@ x-app: &app
   environment: &env
     SET_ID: SET-01
     DATABASE_URL: postgresql://qm:qm@timescaledb:5432/telemetria
-    MQTT_HOST: mosquitto
-    MQTT_PORT: "1883"
+    MQTT_HOST: ${MQTT_HOST:-mosquitto}
+    MQTT_PORT: ${MQTT_PORT:-1883}
+    MQTT_CA: ${MQTT_CA:-}
+    MQTT_CERT: ${MQTT_CERT:-}
+    MQTT_KEY: ${MQTT_KEY:-}
+    AWS_REGION: ${AWS_REGION:-us-east-1}
+    SQS_ENDPOINT: http://sqs:9324
+    AWS_ACCESS_KEY_ID: local       # ElasticMQ no valida credenciales
+    AWS_SECRET_ACCESS_KEY: local
     SAMPLE_SECONDS: ${SAMPLE_SECONDS:-5}
     AGENT_INTERVAL: ${AGENT_INTERVAL:-120}
     ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
@@ -17,7 +27,7 @@ x-app: &app
     GRAFANA_URL: http://localhost:3000/d/qm-flota
   depends_on:
     timescaledb: { condition: service_healthy }
-    mosquitto: { condition: service_started }
+    mosquitto: { condition: service_started, required: false }
 
 services:
   mosquitto:
@@ -26,6 +36,12 @@ services:
     ports: ["1883:1883"]
     volumes: ["./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro"]
 
+  sqs:
+    image: softwaremill/elasticmq-native:1.6.9
+    restart: unless-stopped
+    ports: ["9324:9324", "9325:9325"]   # 9325: consola web de ElasticMQ
+    volumes: ["./sqs/elasticmq.conf:/opt/elasticmq.conf:ro"]
+
   timescaledb:
     image: timescale/timescaledb:2.17.2-pg16
     restart: unless-stopped
@@ -33,7 +49,7 @@ services:
       POSTGRES_USER: qm
       POSTGRES_PASSWORD: qm
       POSTGRES_DB: telemetria
-    # Memoria acotada, como en una t3.micro de la capa gratuita (1 GB para base + Grafana).
+    # Memoria acotada, como en una instancia micro de la capa gratuita.
     command: postgres -c shared_buffers=128MB -c work_mem=8MB -c max_connections=40 -c timescaledb.max_background_workers=4
     ports: ["5432:5432"]
     volumes:
@@ -51,9 +67,17 @@ services:
     environment: { <<: *env, BUFFER_PATH: /data/outbox.sqlite }
     volumes: ["buffer:/data"]
 
-  ingest:
+  iot-rule:
     <<: *app
-    command: python -m qm.ingest_mqtt
+    command: python -m qm.local_aws iot-rule
+    depends_on: [mosquitto, sqs]
+
+  ingest-lambda:
+    <<: *app
+    command: python -m qm.local_aws lambda
+    depends_on:
+      sqs: { condition: service_started }
+      timescaledb: { condition: service_healthy }
 
   agent:
     <<: *app

@@ -1,0 +1,18 @@
+# Modo AWS (lo activa setup-ec2.sh cuando la EC2 la creó el CDK):
+#   el simulador y la consola hablan con IoT Core por 8883 con certificado X.509,
+#   la ingesta la hace la Lambda real (IoT Core → SQS → Lambda), y los equivalentes locales se apagan.
+x-iot: &iot
+  volumes: ["./certs:/certs:ro"]
+
+services:
+  mosquitto: { profiles: ["local"] }
+  sqs: { profiles: ["local"] }
+  iot-rule: { profiles: ["local"] }
+  ingest-lambda: { profiles: ["local"] }
+
+  simulator: *iot
+  api: *iot
+
+  # La Lambda entra por la red de la VPC; el security group solo deja pasar a la Lambda.
+  timescaledb:
+    ports: !override ["5432:5432"]

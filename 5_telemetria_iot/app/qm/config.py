@@ -16,7 +16,12 @@ MQTT_CA = env("MQTT_CA")
 MQTT_CERT = env("MQTT_CERT")
 MQTT_KEY = env("MQTT_KEY")
 
-SAMPLE_SECONDS = float(env("SAMPLE_SECONDS", "5"))
+# SQS: ElasticMQ en local (SQS_ENDPOINT=http://sqs:9324); en AWS queda vacío y usa el endpoint real.
+AWS_REGION = env("AWS_REGION", "us-east-1")
+SQS_ENDPOINT = env("SQS_ENDPOINT") or None
+SQS_QUEUE = env("SQS_QUEUE", "telemetria")
+
+SAMPLE_SECONDS =float(env("SAMPLE_SECONDS", "5"))
 BUFFER_PATH = env("BUFFER_PATH", "/data/outbox.sqlite")
 
 AGENT_INTERVAL = int(env("AGENT_INTERVAL", "120"))

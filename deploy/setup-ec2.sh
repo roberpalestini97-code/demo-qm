@@ -55,10 +55,46 @@ EOF
   echo "Creado $ENV (usuario y contraseña de la consola adentro)"
 fi
 
+FILES="-f docker-compose.yml -f docker-compose.ec2.yml"
+
+# Modo AWS: el CDK pasa IOT_THING e IOT_POLICY. La clave privada se genera acá y nunca sale de la EC2;
+# el rol de la instancia firma el certificado en IoT Core a partir del CSR.
+if [ -n "${IOT_THING:-}" ]; then
+  echo "== IoT Core ($IOT_THING)"
+  export AWS_DEFAULT_REGION=${AWS_REGION:-us-east-1}
+  command -v aws >/dev/null || sudo snap install aws-cli --classic
+  CERTS=$APP/certs
+  if [ ! -f "$CERTS/device.pem.crt" ]; then
+    mkdir -p "$CERTS"
+    openssl req -new -newkey rsa:2048 -nodes -subj "/CN=$IOT_THING" \
+      -keyout "$CERTS/private.pem.key" -out "$CERTS/device.csr"
+    ARN=$(aws iot create-certificate-from-csr --set-as-active \
+      --certificate-signing-request "file://$CERTS/device.csr" \
+      --certificate-pem-outfile "$CERTS/device.pem.crt" --query certificateArn --output text)
+    aws iot attach-policy --policy-name "$IOT_POLICY" --target "$ARN"
+    aws iot attach-thing-principal --thing-name "$IOT_THING" --principal "$ARN"
+    curl -fsS -o "$CERTS/AmazonRootCA1.pem" https://www.amazontrust.com/repository/AmazonRootCA1.pem
+    chmod 644 "$CERTS"/*   # los contenedores corren con otro usuario; la EC2 es de un solo uso
+  fi
+  if ! grep -q '^MQTT_HOST=' "$ENV"; then
+    ENDPOINT=$(aws iot describe-endpoint --endpoint-type iot:Data-ATS --query endpointAddress --output text)
+    sed -i 's/^SAMPLE_SECONDS=.*/SAMPLE_SECONDS=15/' "$ENV"   # dentro de los 250 mil mensajes de regla por mes
+    cat >> "$ENV" <<EOF
+MQTT_HOST=$ENDPOINT
+MQTT_PORT=8883
+MQTT_CA=/certs/AmazonRootCA1.pem
+MQTT_CERT=/certs/device.pem.crt
+MQTT_KEY=/certs/private.pem.key
+AWS_REGION=$AWS_DEFAULT_REGION
+EOF
+  fi
+  FILES="$FILES -f docker-compose.aws.yml"
+fi
+
 echo "== Levantando"
 cd "$APP"
-sudo docker compose -f docker-compose.yml -f docker-compose.ec2.yml up -d --build
-sudo docker compose -f docker-compose.yml -f docker-compose.ec2.yml ps
+sudo docker compose $FILES up -d --build --remove-orphans
+sudo docker compose $FILES ps
 echo
 echo "Listo: $(grep ^PUBLIC_URL "$ENV" | cut -d= -f2)"
 echo "Consola y Grafana piden usuario 'qm' y la contraseña de $ENV"

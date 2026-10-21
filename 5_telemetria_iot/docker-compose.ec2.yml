@@ -3,6 +3,8 @@
 services:
   mosquitto:
     ports: !reset []
+  sqs:
+    ports: !reset []
   timescaledb:
     ports: !reset []
   api:
