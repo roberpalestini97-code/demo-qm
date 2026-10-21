@@ -33,8 +33,11 @@ fi
 echo "== Configuración (.env)"
 ENV=$APP/.env
 if [ ! -f "$ENV" ]; then
+  if [ -z "${PUBLIC_IP:-}" ]; then
   TOKEN=$(curl -fsS -X PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
-  IP=$(curl -fsS -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4)
+  PUBLIC_IP=$(curl -fsS -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4)
+  fi
+  IP=$PUBLIC_IP
   HOST="${IP//./-}.sslip.io"
   PASS=$(openssl rand -base64 18 | tr -d '/+=' | cut -c1-16)
   HASH=$(sudo docker run --rm caddy:2.8.4-alpine caddy hash-password --plaintext "$PASS")

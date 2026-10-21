@@ -1,0 +1,21 @@
+{
+  "name": "qm-demos-infra",
+  "version": "1.0.0",
+  "scripts": {
+    "synth": "cdk synth",
+    "deploy": "cdk deploy --require-approval never",
+    "destroy": "cdk destroy",
+    "check": "tsc -p ."
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.274.0",
+    "constructs": "^10.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "aws-cdk": "^2.1146.0",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.9.3"
+  },
+  "private": true
+}
