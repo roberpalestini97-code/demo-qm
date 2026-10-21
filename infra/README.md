@@ -2,7 +2,8 @@
 
 Levanta todas las demos y la ingesta de telemetría por IoT Core. La EC2, al arrancar, clona este repo, genera el certificado del data van y corre `deploy/setup-ec2.sh`. No hace falta ningún paso a mano dentro del servidor.
 
-```n data van (EC2) ─MQTT 8883, X.509─► IoT Core ─regla─► SQS (+ DLQ) ─► Lambda ingest ─► TimescaleDB (EC2)
+```
+ data van (EC2) ─MQTT 8883, X.509─► IoT Core ─regla─► SQS (+ DLQ) ─► Lambda ingest ─► TimescaleDB (EC2)
 ```
 
 En local, el mismo camino corre en Docker con Mosquitto, ElasticMQ y el mismo handler de Lambda (ver `5_telemetria_iot/README.md`).
