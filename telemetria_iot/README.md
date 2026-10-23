@@ -56,7 +56,7 @@ En `claude_desktop_config.json`:
   "mcpServers": {
     "qm-flota": {
       "command": "docker",
-      "args": ["compose", "-f", "C:/Users/agent/Documents/QM/5_telemetria_iot/docker-compose.yml",
+      "args": ["compose", "-f", "<ruta al repo>/telemetria_iot/docker-compose.yml",
                "run", "--rm", "-i", "mcp"]
     }
   }

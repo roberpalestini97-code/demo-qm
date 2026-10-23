@@ -3,12 +3,13 @@
   var base = new URL('.', document.currentScript.src).pathname;
   var links = [
     ['Inicio', base],
-    ['Calculadora', base + '1_calculadora_combustible.html'],
-    ['Configurador', base + '3_configurador_bomba.html'],
-    ['Flota simulada', base + '4_dashboard_flota.html'],
+    ['Calculadora', base + 'calculadora_combustible.html'],
+    ['Configurador', base + 'configurador_bomba.html'],
+    ['Flota simulada', base + 'dashboard_flota.html'],
     ['Telemetría en vivo', base + 'consola/'],
     ['Grafana', base + 'grafana/d/qm-flota'],
-    ['Propuesta PDF', base + '2_canva_propuesta_demos.pdf'],
+    ['Arquitectura', base + 'arquitectura.html'],
+    ['Propuesta PDF', base + 'propuesta_demos.pdf'],
   ];
   var here = location.pathname.replace(/index\.html$/, '');
   var css = document.createElement('style');

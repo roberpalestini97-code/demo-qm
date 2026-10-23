@@ -24,20 +24,22 @@ footer{color:var(--muted);font-size:13px;margin-top:32px;border-top:1px solid va
   <h1>Demos para QM Equipment</h1>
   <p class="lead">Prototipos sobre los equipos de QM: dos herramientas comerciales con datos reales de Vaca Muerta y una plataforma de telemetría de punta a punta con un agente de mantenimiento. Los datos de las bombas son simulados.</p>
   <div class="grid">
-    <a class="card" href="1_calculadora_combustible.html"><div class="n">Demo 1</div><h2>Calculadora de combustible</h2>
+    <a class="card" href="calculadora_combustible.html"><div class="n">Demo 1</div><h2>Calculadora de combustible</h2>
       <p>Gasoil, bi-fuel, gas y turbina con la actividad de fractura real de cada operadora: ahorro, CO₂ y repago.</p><span class="tag">Datos abiertos · Secretaría de Energía</span></a>
-    <a class="card" href="3_configurador_bomba.html"><div class="n">Demo 2</div><h2>Configurador de bomba</h2>
+    <a class="card" href="configurador_bomba.html"><div class="n">Demo 2</div><h2>Configurador de bomba</h2>
       <p>Motor, transmisión, bomba y combustible, con la curva de presión y caudal, la ficha técnica en PDF y el pedido de cotización.</p><span class="tag">Un solo archivo HTML</span></a>
-    <a class="card" href="4_dashboard_flota.html"><div class="n">Demo 3</div><h2>Flota simulada</h2>
+    <a class="card" href="dashboard_flota.html"><div class="n">Demo 3</div><h2>Flota simulada</h2>
       <p>Un set de 8 bombas en el navegador, con las horas del fluid end y alertas de mantenimiento.</p><span class="tag">Sin servidor</span></a>
     <a class="card" href="consola/"><div class="n">Demo 4</div><h2>Telemetría en vivo con IA agéntica</h2>
       <p>El data van publica por MQTT y los datos se guardan en TimescaleDB. Un agente con Claude propone órdenes de mantenimiento, que aprueba un técnico. Se pueden inyectar fallas y cortar el enlace satelital.</p><span class="tag">MQTT · TimescaleDB · Claude · MCP</span></a>
-    <a class="card" href="grafana/d/qm-flota"><div class="n">Demo 4</div><h2>Tablero en Grafana</h2>
+    <a class="card" href="grafana/d/qm-flota"><div class="n">Demo 4 · tablero</div><h2>Tablero en Grafana</h2>
       <p>Presión, temperatura, vibración, aceite, sustitución de gas y caudal por vuelta de cada bomba, en tiempo real.</p><span class="tag">Grafana</span></a>
-    <a class="card" href="2_canva_propuesta_demos.pdf"><div class="n">Resumen</div><h2>Propuesta en PDF</h2>
+    <a class="card" href="propuesta_demos.pdf"><div class="n">Resumen</div><h2>Propuesta en PDF</h2>
       <p>Qué vimos en los videos de QM, las demos y dónde está la actividad de fractura por operadora.</p><span class="tag">10 páginas</span></a>
+    <a class="card" href="arquitectura.html"><div class="n">Infraestructura</div><h2>Arquitectura en AWS</h2>
+      <p>Cómo está desplegado todo: EC2 con Docker detrás de Caddy, ingesta por IoT Core, SQS y Lambda, acceso por SSM sin SSH. Definido en AWS CDK.</p><span class="tag">CDK · IoT Core · SQS · Lambda</span></a>
   </div>
-  <footer>Demo independiente de Rober Palestini · no es un sitio oficial de QM Equipment. Las cifras de los equipos son supuestos a validar.</footer>
+  <footer>Demo independiente de Rober Palestini · no es un sitio oficial de QM Equipment. Las cifras de los equipos son supuestos a validar. Código: <a href="https://github.com/roberpalestini97-code/demo-qm" style="color:var(--acc)">github.com/roberpalestini97-code/demo-qm</a></footer>
 </main>
 <script src="nav.js" defer></script>
 </body>

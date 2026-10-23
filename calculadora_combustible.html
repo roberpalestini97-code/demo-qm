@@ -29,7 +29,7 @@ header .tag{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:v
 h1{margin:6px 0 4px;font-size:clamp(22px,3.2vw,32px)}
 header p{margin:0;color:var(--muted);max-width:720px}
 main{max-width:1150px;margin:auto;padding:16px;display:grid;grid-template-columns:340px 1fr;gap:20px}
-@media (max-width:900px){main{grid-template-columns:1fr}}
+@media (max-width:900px){main{grid-template-columns:minmax(0,1fr)}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
 h2{font-size:14px;margin:0 0 12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
 label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
@@ -40,7 +40,7 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 details{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 summary{cursor:pointer;font-size:13px;font-weight:600}
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-@media (max-width:640px){.grid4{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .opt{border:1px solid var(--line);border-radius:10px;padding:12px;position:relative;overflow:hidden}
 .opt::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--c)}
 .opt h3{margin:4px 0 8px;font-size:14px}
@@ -58,7 +58,7 @@ th{font-size:12px;color:var(--muted);font-weight:600}
 .bar .track{background:var(--bg);border-radius:6px;height:22px;overflow:hidden}
 .bar .fill{height:100%;border-radius:6px;transition:width .35s}
 .bar .v{text-align:right;font-variant-numeric:tabular-nums}
-.stack{display:grid;gap:20px}
+.stack{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;min-width:0}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 @media (max-width:640px){.kpis{grid-template-columns:1fr}}
 .kpi .l{font-size:12px;color:var(--muted)}

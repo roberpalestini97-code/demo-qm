@@ -1,3 +1,8 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Arquitectura QM Demos</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,15 +34,16 @@
   --line: #5a6870; --line-soft: #34414a; --user: #ec8150; --data: #4fb6c9; --ctl: #8e9ba3;
   color-scheme: dark;
 }
-body { background: var(--bg); color: var(--fg); font-family: var(--sans); line-height: 1.5; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); line-height: 1.5; }
 .wrap { max-width: 1240px; margin: 0 auto; padding-block: 32px 48px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  display: grid; gap: 28px; }
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
 header { display: grid; gap: 6px; }
 .eyebrow { font: 500 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 h1 { margin: 0; font-size: clamp(24px, 3.4vw, 34px); font-weight: 700; letter-spacing: -.01em; text-wrap: balance; }
 h2 { margin: 0 0 10px; font-size: 18px; font-weight: 600; }
 p { margin: 0; max-width: 68ch; color: var(--muted); }
+a { color: var(--data); }
 .legend { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 13px; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: 8px; }
 .legend i { width: 28px; height: 0; border-top: 2px solid; display: inline-block; }
@@ -75,12 +81,13 @@ tbody th { font-weight: 600; white-space: nowrap; }
 code { font: 13px var(--mono); }
 .note { font-size: 13px; }
 </style>
-
+</head>
+<body>
 <div class="wrap">
   <header>
     <div class="eyebrow">QM Equipment · demos · infraestructura</div>
     <h1>Arquitectura de producción en AWS</h1>
-    <p>Lo que levanta <code>cdk deploy</code>: una sola EC2 en una VPC propia, con todas las demos en Docker detrás de Caddy. En local corre el mismo <code>docker compose</code>, sin Caddy y con los puertos abiertos.</p>
+    <p>Lo que levanta <code>cdk deploy</code>: una EC2 en una VPC propia con las demos en Docker detrás de Caddy, y la ingesta de telemetría por IoT Core, SQS y Lambda. En local corre el mismo <code>docker compose</code>, con un equivalente de cada servicio administrado.</p>
   </header>
 
   <div class="legend" aria-hidden="true">
@@ -91,7 +98,7 @@ code { font: 13px var(--mono); }
 
   <figure>
     <div class="scroll">
-<svg viewBox="0 0 1240 860" role="img" aria-label="Una EC2 en una VPC pública de AWS recibe todo el tráfico por una IP elástica en los puertos 80 y 443. Caddy reparte a las demos estáticas, a Grafana y a la consola. La telemetría va del simulador a Mosquitto, a la ingesta y a TimescaleDB; el agente lee la base y consulta la API de Anthropic. El operador despliega con CDK y entra por SSM, sin SSH.">
+<svg viewBox="0 0 1240 1010" role="img" aria-label="Una EC2 en una VPC pública de AWS recibe todo el tráfico web por una IP elástica en los puertos 80 y 443. Caddy reparte a las demos estáticas, a Grafana y a la consola. El simulador del data van publica por MQTT con certificado X.509 a IoT Core; una regla manda los mensajes a SQS, con cola de errores, y una Lambda dentro de la VPC los inserta en TimescaleDB por IP privada. La consola manda comandos al simulador por IoT Core. El agente lee la base y consulta la API de Anthropic. El operador despliega con CDK y entra por SSM, sin SSH.">
   <defs>
     <marker id="m-u" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path class="mk-u" d="M0,0 L8,4 L0,8 z"/></marker>
     <marker id="m-d" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto"><path class="mk-d" d="M0,0 L8,4 L0,8 z"/></marker>
@@ -104,15 +111,15 @@ code { font: 13px var(--mono); }
   <text class="s" x="425" y="60" text-anchor="middle">laptop con AWS CLI y CDK</text>
 
   <!-- Cuenta AWS -->
-  <rect class="zone" x="210" y="110" width="780" height="735" rx="6"/>
+  <rect class="zone" x="210" y="110" width="780" height="885" rx="6"/>
   <text class="z" x="975" y="132" text-anchor="end">CUENTA AWS · STACK QmDemos</text>
 
   <rect class="box" x="250" y="140" width="160" height="60" rx="4"/>
   <text class="t" x="330" y="166" text-anchor="middle">CloudFormation</text>
   <text class="s" x="330" y="183" text-anchor="middle">generado por CDK</text>
   <rect class="box" x="440" y="140" width="160" height="60" rx="4"/>
-  <text class="t" x="520" y="166" text-anchor="middle">SSM Session Manager</text>
-  <text class="s" x="520" y="183" text-anchor="middle">shell sin SSH</text>
+  <text class="t" x="520" y="166" text-anchor="middle">SSM</text>
+  <text class="s" x="520" y="183" text-anchor="middle">shell sin SSH · Parameter Store</text>
   <rect class="box" x="630" y="140" width="160" height="60" rx="4"/>
   <text class="t" x="710" y="166" text-anchor="middle">AWS Budgets</text>
   <text class="s" x="710" y="183" text-anchor="middle">tope US$ 1 por mes, opcional</text>
@@ -125,71 +132,82 @@ code { font: 13px var(--mono); }
   <text class="lc" x="718" y="100">mail si se pasa</text>
 
   <!-- VPC -->
-  <rect class="zone vpc" x="230" y="230" width="740" height="600" rx="6"/>
+  <rect class="zone vpc" x="230" y="230" width="740" height="625" rx="6"/>
   <text class="z" x="955" y="252" text-anchor="end">VPC · 1 AZ · SUBRED PÚBLICA · SIN NAT</text>
 
   <path class="f-c" d="M330,200 V278" marker-end="url(#m-c)"/>
-  <text class="lc" x="338" y="268">crea red, SG, IP y EC2</text>
+  <text class="lc" x="338" y="268">crea todo el stack</text>
   <path class="f-c" d="M520,200 V278" marker-end="url(#m-c)"/>
-  <text class="lc" x="528" y="268">shell</text>
+  <text class="lc" x="528" y="268">shell, API key y clave</text>
 
   <!-- EC2 -->
-  <rect class="ec2" x="290" y="280" width="660" height="535" rx="5"/>
+  <rect class="ec2" x="290" y="280" width="660" height="430" rx="5"/>
   <text class="t" x="310" y="305">EC2 · Ubuntu 24.04 · t3.small</text>
-  <text class="s" x="310" y="322">EBS 30 GB gp3 cifrado · IMDSv2 · rol SSM · security group: 80 y 443, el 22 cerrado</text>
+  <text class="s" x="310" y="322">EBS 30 GB gp3 cifrado · IMDSv2 · rol SSM · entrada: 80 y 443, el 5432 solo desde la Lambda, el 22 cerrado</text>
   <text class="z" x="310" y="352">DOCKER COMPOSE · RED INTERNA</text>
 
-  <!-- IP elástica (única puerta) -->
-  <rect class="gate" x="255" y="370" width="50" height="290" rx="4"/>
-  <text class="lu" transform="translate(284 515) rotate(-90)" text-anchor="middle">IP elástica · &lt;ip&gt;.sslip.io</text>
+  <!-- IP elástica (única puerta web) -->
+  <rect class="gate" x="255" y="370" width="50" height="210" rx="4"/>
+  <text class="lu" transform="translate(284 475) rotate(-90)" text-anchor="middle">IP elástica · &lt;ip&gt;.sslip.io</text>
 
   <!-- Caddy -->
-  <rect class="box" x="330" y="370" width="120" height="290" rx="4"/>
-  <text class="t" x="390" y="488" text-anchor="middle">Caddy</text>
-  <text class="s" x="390" y="505" text-anchor="middle">:80 · :443</text>
-  <text class="s" x="390" y="528" text-anchor="middle">HTTPS automático</text>
-  <text class="s" x="390" y="543" text-anchor="middle">con Let's Encrypt</text>
-  <text class="s" x="390" y="566" text-anchor="middle">pide clave en</text>
-  <text class="s" x="390" y="581" text-anchor="middle">/consola y /grafana</text>
+  <rect class="box" x="330" y="370" width="120" height="210" rx="4"/>
+  <text class="t" x="390" y="440" text-anchor="middle">Caddy</text>
+  <text class="s" x="390" y="457" text-anchor="middle">:80 · :443</text>
+  <text class="s" x="390" y="480" text-anchor="middle">HTTPS automático</text>
+  <text class="s" x="390" y="495" text-anchor="middle">con Let's Encrypt</text>
+  <text class="s" x="390" y="518" text-anchor="middle">pide clave en</text>
+  <text class="s" x="390" y="533" text-anchor="middle">/consola y /grafana</text>
 
   <!-- Columna 2 -->
-  <rect class="box" x="540" y="370" width="170" height="70" rx="4"/>
-  <text class="t" x="625" y="395" text-anchor="middle">Demos estáticas</text>
-  <text class="s" x="625" y="412" text-anchor="middle">calculadora, configurador,</text>
-  <text class="s" x="625" y="427" text-anchor="middle">flota y propuesta PDF</text>
-  <rect class="box" x="540" y="485" width="170" height="70" rx="4"/>
-  <text class="t" x="625" y="515" text-anchor="middle">Grafana</text>
-  <text class="s" x="625" y="532" text-anchor="middle">tablero de flota</text>
-  <rect class="box" x="540" y="590" width="170" height="70" rx="4"/>
-  <text class="t" x="625" y="612" text-anchor="middle">Consola · FastAPI</text>
-  <text class="s" x="625" y="629" text-anchor="middle">aprueba órdenes</text>
-  <text class="s" x="625" y="644" text-anchor="middle">inyecta fallas</text>
+  <rect class="box" x="540" y="370" width="170" height="60" rx="4"/>
+  <text class="t" x="625" y="393" text-anchor="middle">Demos estáticas</text>
+  <text class="s" x="625" y="410" text-anchor="middle">calculadora, configurador,</text>
+  <text class="s" x="625" y="423" text-anchor="middle">flota, arquitectura, PDF</text>
+  <rect class="box" x="540" y="445" width="170" height="60" rx="4"/>
+  <text class="t" x="625" y="472" text-anchor="middle">Grafana</text>
+  <text class="s" x="625" y="489" text-anchor="middle">tablero de flota</text>
+  <rect class="box" x="540" y="520" width="170" height="60" rx="4"/>
+  <text class="t" x="625" y="543" text-anchor="middle">Consola · FastAPI</text>
+  <text class="s" x="625" y="560" text-anchor="middle">aprueba órdenes, inyecta fallas</text>
 
   <!-- Columna 3 -->
-  <rect class="box" x="780" y="370" width="140" height="70" rx="4"/>
-  <text class="t" x="850" y="392" text-anchor="middle">Agente</text>
-  <text class="s" x="850" y="409" text-anchor="middle">reglas SQL + Claude</text>
-  <text class="s" x="850" y="424" text-anchor="middle">cada 120 s</text>
-  <rect class="box" x="780" y="485" width="140" height="70" rx="4"/>
-  <text class="t" x="850" y="515" text-anchor="middle">TimescaleDB</text>
-  <text class="s" x="850" y="532" text-anchor="middle">telemetría y órdenes</text>
+  <rect class="box" x="780" y="370" width="140" height="60" rx="4"/>
+  <text class="t" x="850" y="391" text-anchor="middle">Agente</text>
+  <text class="s" x="850" y="407" text-anchor="middle">reglas SQL + Claude</text>
+  <text class="s" x="850" y="421" text-anchor="middle">cada 120 s</text>
+  <rect class="box" x="780" y="470" width="140" height="70" rx="4"/>
+  <text class="t" x="850" y="500" text-anchor="middle">TimescaleDB</text>
+  <text class="s" x="850" y="517" text-anchor="middle">telemetría y órdenes</text>
 
-  <!-- Fila de telemetría -->
-  <rect class="box" x="330" y="720" width="120" height="70" rx="4"/>
-  <text class="t" x="390" y="742" text-anchor="middle">Simulador</text>
-  <text class="s" x="390" y="759" text-anchor="middle">8 bombas, SET-01</text>
-  <text class="s" x="390" y="774" text-anchor="middle">buffer offline</text>
-  <rect class="box" x="540" y="720" width="170" height="70" rx="4"/>
-  <text class="t" x="625" y="750" text-anchor="middle">Mosquitto</text>
-  <text class="s" x="625" y="767" text-anchor="middle">MQTT, solo red interna</text>
-  <rect class="box" x="780" y="720" width="140" height="70" rx="4"/>
-  <text class="t" x="850" y="750" text-anchor="middle">Ingesta</text>
-  <text class="s" x="850" y="767" text-anchor="middle">MQTT a SQL</text>
+  <!-- Data van -->
+  <rect class="box" x="330" y="610" width="120" height="70" rx="4"/>
+  <text class="t" x="390" y="632" text-anchor="middle">Simulador</text>
+  <text class="s" x="390" y="649" text-anchor="middle">data van, 8 bombas</text>
+  <text class="s" x="390" y="664" text-anchor="middle">buffer offline</text>
+
+  <!-- Lambda (en la VPC, fuera de la EC2) -->
+  <rect class="box" x="780" y="750" width="140" height="75" rx="4"/>
+  <text class="t" x="850" y="772" text-anchor="middle">Lambda ingest</text>
+  <text class="s" x="850" y="789" text-anchor="middle">Python 3.12, en la VPC</text>
+  <text class="s" x="850" y="804" text-anchor="middle">mismo código que local</text>
+
+  <!-- Servicios administrados -->
+  <text class="z" x="975" y="988" text-anchor="end">SERVICIOS ADMINISTRADOS</text>
+  <rect class="box" x="330" y="895" width="190" height="80" rx="4"/>
+  <text class="t" x="425" y="919" text-anchor="middle">IoT Core</text>
+  <text class="s" x="425" y="936" text-anchor="middle">thing datavan-SET-01, X.509</text>
+  <text class="s" x="425" y="951" text-anchor="middle">política acotada a qm/SET-01/*</text>
+  <text class="s" x="425" y="966" text-anchor="middle">regla telemetría y eventos</text>
+  <rect class="box" x="640" y="895" width="160" height="80" rx="4"/>
+  <text class="t" x="720" y="922" text-anchor="middle">SQS telemetria</text>
+  <text class="s" x="720" y="939" text-anchor="middle">+ DLQ, 5 intentos</text>
+  <text class="s" x="720" y="954" text-anchor="middle">amortigua si la base cae</text>
 
   <!-- Personas -->
-  <rect class="box" x="20" y="375" width="155" height="60" rx="4"/>
-  <text class="t" x="97" y="400" text-anchor="middle">Visitante</text>
-  <text class="s" x="97" y="417" text-anchor="middle">demos públicas</text>
+  <rect class="box" x="20" y="370" width="155" height="60" rx="4"/>
+  <text class="t" x="97" y="395" text-anchor="middle">Visitante</text>
+  <text class="s" x="97" y="412" text-anchor="middle">demos públicas</text>
   <rect class="box" x="20" y="490" width="155" height="60" rx="4"/>
   <text class="t" x="97" y="511" text-anchor="middle">Técnico QM</text>
   <text class="s" x="97" y="527" text-anchor="middle">consola y Grafana</text>
@@ -205,46 +223,49 @@ code { font: 13px var(--mono); }
   <text class="s" x="1120" y="427" text-anchor="middle">Haiku 5.5 para el parte</text>
 
   <!-- Flujo de personas -->
-  <path class="f-u" d="M175,405 H253" marker-end="url(#m-u)"/>
-  <text class="lu" x="214" y="397" text-anchor="middle">HTTPS</text>
+  <path class="f-u" d="M175,400 H253" marker-end="url(#m-u)"/>
+  <text class="lu" x="214" y="392" text-anchor="middle">HTTPS</text>
   <path class="f-u" d="M175,520 H253" marker-end="url(#m-u)"/>
   <text class="lu" x="214" y="512" text-anchor="middle">HTTPS</text>
-  <path class="f-u" d="M305,405 H328" marker-end="url(#m-u)"/>
+  <path class="f-u" d="M305,400 H328" marker-end="url(#m-u)"/>
   <path class="f-u" d="M305,520 H328" marker-end="url(#m-u)"/>
-  <path class="f-u" d="M450,405 H538" marker-end="url(#m-u)"/>
-  <text class="lu" x="495" y="397" text-anchor="middle">/</text>
-  <path class="f-u" d="M450,520 H538" marker-end="url(#m-u)"/>
-  <text class="lu" x="495" y="512" text-anchor="middle">/grafana</text>
-  <path class="f-u" d="M450,625 H538" marker-end="url(#m-u)"/>
-  <text class="lu" x="495" y="617" text-anchor="middle">/consola</text>
+  <path class="f-u" d="M450,400 H538" marker-end="url(#m-u)"/>
+  <text class="lu" x="495" y="392" text-anchor="middle">/</text>
+  <path class="f-u" d="M450,475 H538" marker-end="url(#m-u)"/>
+  <text class="lu" x="495" y="467" text-anchor="middle">/grafana</text>
+  <path class="f-u" d="M450,550 H538" marker-end="url(#m-u)"/>
+  <text class="lu" x="495" y="542" text-anchor="middle">/consola</text>
 
   <!-- Telemetría y datos -->
-  <path class="f-d" d="M450,745 H538" marker-end="url(#m-d)"/>
-  <text class="ld" x="495" y="738" text-anchor="middle">telemetría</text>
-  <path class="f-d" d="M710,755 H778" marker-end="url(#m-d)"/>
-  <text class="ld" x="745" y="748" text-anchor="middle">suscribe</text>
-  <path class="f-d" d="M850,720 V557" marker-end="url(#m-d)"/>
-  <text class="ld" x="858" y="645">INSERT</text>
-  <path class="f-d" d="M710,520 H778" marker-end="url(#m-d)"/>
-  <text class="ld" x="745" y="512" text-anchor="middle">consulta</text>
-  <path class="f-d" d="M710,625 H815 V557" marker-end="url(#m-d)"/>
-  <text class="ld" x="740" y="617">órdenes</text>
-  <path class="f-d" d="M850,440 V483" marker-end="url(#m-d)"/>
-  <text class="ld" x="858" y="467">lee y escribe</text>
-  <path class="f-d" d="M920,405 H1018" marker-end="url(#m-d)"/>
-  <text class="ld" x="970" y="397" text-anchor="middle">HTTPS</text>
+  <path class="f-d" d="M375,680 V893" marker-end="url(#m-d)"/>
+  <text class="ld" x="367" y="770" text-anchor="end">MQTT 8883</text>
+  <text class="ld" x="367" y="785" text-anchor="end">X.509</text>
+  <path class="f-d" d="M520,935 H638" marker-end="url(#m-d)"/>
+  <text class="ld" x="579" y="927" text-anchor="middle">regla</text>
+  <path class="f-d" d="M800,935 H850 V827" marker-end="url(#m-d)"/>
+  <text class="ld" x="858" y="870">lotes de 50</text>
+  <path class="f-d" d="M850,750 V542" marker-end="url(#m-d)"/>
+  <text class="ld" x="842" y="735" text-anchor="end">INSERT por IP privada</text>
+  <path class="f-d" d="M710,490 H778" marker-end="url(#m-d)"/>
+  <text class="ld" x="745" y="482" text-anchor="middle">consulta</text>
+  <path class="f-d" d="M710,565 H815 V542" marker-end="url(#m-d)"/>
+  <text class="ld" x="722" y="595">órdenes</text>
+  <path class="f-d" d="M850,430 V468" marker-end="url(#m-d)"/>
+  <text class="ld" x="858" y="454">lee y escribe</text>
+  <path class="f-d" d="M920,400 H1018" marker-end="url(#m-d)"/>
+  <text class="ld" x="970" y="392" text-anchor="middle">HTTPS</text>
 
   <!-- Control -->
-  <path class="f-c" d="M625,660 V718" marker-end="url(#m-c)"/>
-  <text class="lc" x="633" y="694">fallas, reparación</text>
-  <path class="f-c" d="M540,772 H452" marker-end="url(#m-c)"/>
-  <text class="lc" x="495" y="786" text-anchor="middle">comandos</text>
+  <path class="f-c" d="M625,580 V915 H522" marker-end="url(#m-c)"/>
+  <text class="lc" x="633" y="770">fallas, reparación</text>
+  <text class="lc" x="633" y="785">corte de enlace</text>
+  <path class="f-c" d="M415,893 V682" marker-end="url(#m-c)"/>
+  <text class="lc" x="423" y="770">comandos</text>
   <path class="f-c" d="M1020,310 H952" marker-end="url(#m-c)"/>
-  <text class="lc" x="986" y="302" text-anchor="middle">git clone</text>
-  <text class="lc" x="986" y="326" text-anchor="middle">al arrancar</text>
+  <text class="lc" x="986" y="302" text-anchor="middle">clone</text>
 </svg>
     </div>
-    <figcaption>Todo entra por la IP elástica en el 443 (el 80 solo redirige y valida el certificado). Base, MQTT, API y Grafana no tienen puertos publicados: solo Caddy los alcanza. Al arrancar, la EC2 clona el repo y corre <code>deploy/setup-ec2.sh</code>, que instala Docker, genera la clave de la consola y levanta el compose.</figcaption>
+    <figcaption>La web entra por la IP elástica en el 443 (el 80 solo redirige y valida el certificado). La telemetría no pasa por ahí: el data van publica a IoT Core con su propio certificado, cuya clave privada se genera dentro de la EC2 y nunca sale. Base y Grafana no tienen puertos públicos; el 5432 solo acepta a la Lambda. Al arrancar, la EC2 clona el repo y corre <code>deploy/setup-ec2.sh</code>, que instala Docker, firma el certificado, lee la API key de Parameter Store, genera la clave de la consola y levanta el compose.</figcaption>
   </figure>
 
   <section>
@@ -253,17 +274,22 @@ code { font: 13px var(--mono); }
       <table>
         <thead><tr><th></th><th>Local</th><th>Producción (CDK)</th></tr></thead>
         <tbody>
-          <tr><th>Cómo se levanta</th><td><code>docker compose up -d --build</code> en <code>5_telemetria_iot/</code></td><td><code>cdk deploy</code>, después la EC2 se instala sola con user data</td></tr>
-          <tr><th>Demos 1 a 3</th><td>Abrir los HTML directo en el navegador</td><td>Caddy las sirve desde <code>/srv</code>, sin el resto del repo</td></tr>
-          <tr><th>Puertos</th><td>8000 consola, 3000 Grafana, 5432 base, 1883 MQTT</td><td>Solo 80 y 443; todo lo demás en la red interna de Docker</td></tr>
-          <tr><th>Acceso</th><td>Sin clave; Grafana anónimo de solo lectura</td><td>Usuario y clave en <code>/consola</code> y <code>/grafana</code></td></tr>
+          <tr><th>Cómo se levanta</th><td><code>docker compose up -d --build</code> en <code>telemetria_iot/</code></td><td><code>cdk deploy</code>, después la EC2 se instala sola con user data</td></tr>
+          <tr><th>Broker MQTT</th><td>Mosquitto</td><td>IoT Core, con certificado X.509 y política por thing</td></tr>
+          <tr><th>Ingesta</th><td>Regla local → ElasticMQ → el mismo handler de Lambda</td><td>Regla de IoT → SQS (+ DLQ) → Lambda en la VPC</td></tr>
+          <tr><th>Demos estáticas</th><td>Abrir los HTML directo en el navegador</td><td>Caddy las sirve desde <code>/srv</code>, sin el resto del repo</td></tr>
+          <tr><th>Puertos</th><td>8000 consola, 3000 Grafana, 5432 base, 1883 MQTT</td><td>Solo 80 y 443; el 5432 solo para la Lambda</td></tr>
+          <tr><th>Acceso</th><td>Sin clave; Grafana anónimo de solo lectura</td><td>Usuario y clave en <code>/consola</code> y <code>/grafana</code>; la clave queda en Parameter Store</td></tr>
           <tr><th>HTTPS</th><td>No</td><td>Let's Encrypt en <code>&lt;ip&gt;.sslip.io</code>; la IP elástica lo mantiene estable</td></tr>
           <tr><th>Administración</th><td>Docker Desktop</td><td>SSM, con el puerto 22 cerrado</td></tr>
-          <tr><th>Claude</th><td colspan="2">Opcional en los dos. Sin <code>ANTHROPIC_API_KEY</code>, el agente corre en modo reglas y crea las mismas órdenes sin costo.</td></tr>
+          <tr><th>Claude</th><td><code>ANTHROPIC_API_KEY</code> en <code>.env</code></td><td>SecureString en Parameter Store, que la EC2 lee al instalarse</td></tr>
         </tbody>
       </table>
     </div>
   </section>
 
-  <p class="note">Fuera del stack: el repo trae una ingesta alternativa para escalar (IoT Core → SQS → Lambda, en <code>lambda_ingest.py</code>), pero el CDK todavía no la crea.</p>
+  <p class="note">Sin API key, el agente corre en modo reglas y crea las mismas órdenes sin costo. El agente queda en la EC2 y no en una Lambda porque necesita salida a internet para la API de Claude, y una Lambda en la VPC no la tiene sin NAT Gateway. Código: <a href="https://github.com/roberpalestini97-code/demo-qm">github.com/roberpalestini97-code/demo-qm</a>.</p>
 </div>
+<script src="nav.js" defer></script>
+</body>
+</html>

@@ -5,7 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$PWD
-APP=$ROOT/5_telemetria_iot
+APP=$ROOT/telemetria_iot
 
 echo "== Docker"
 if ! command -v docker >/dev/null; then
@@ -30,8 +30,20 @@ if ! swapon --show | grep -q /swapfile; then
   grep -q /swapfile /etc/fstab || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 fi
 
-echo "== Configuración (.env)"
 ENV=$APP/.env
+# Al volver a correrlo después de un git pull no hacen falta las variables que pasa el CDK: quedan guardadas en .env.
+for v in IOT_THING IOT_POLICY SSM_PREFIX AWS_REGION; do
+  if [ -z "${!v:-}" ] && [ -f "$ENV" ] && grep -q "^$v=" "$ENV"; then
+    export "$v=$(grep "^$v=" "$ENV" | cut -d= -f2-)"
+  fi
+done
+
+if [ -n "${IOT_THING:-}${SSM_PREFIX:-}" ]; then
+  export AWS_DEFAULT_REGION=${AWS_REGION:-us-east-1}
+  command -v aws >/dev/null || sudo snap install aws-cli --classic
+fi
+
+echo "== Configuración (.env)"
 if [ ! -f "$ENV" ]; then
   if [ -z "${PUBLIC_IP:-}" ]; then
   TOKEN=$(curl -fsS -X PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
@@ -55,14 +67,28 @@ EOF
   echo "Creado $ENV (usuario y contraseña de la consola adentro)"
 fi
 
+# Parameter Store: la clave de la consola queda a mano del operador y la API key de Claude no pasa por el repo ni por CloudFormation.
+if [ -n "${SSM_PREFIX:-}" ]; then
+  echo "== Parameter Store ($SSM_PREFIX)"
+  grep -q '^SSM_PREFIX=' "$ENV" || echo "SSM_PREFIX=$SSM_PREFIX" >> "$ENV"
+  aws ssm put-parameter --name "$SSM_PREFIX/consola-password" --type SecureString --overwrite \
+    --value "$(grep '^DEMO_PASSWORD=' "$ENV" | cut -d= -f2-)" >/dev/null
+  KEY=$(aws ssm get-parameter --with-decryption --name "$SSM_PREFIX/anthropic-api-key" \
+    --query Parameter.Value --output text 2>/dev/null || true)
+  if [ -n "$KEY" ]; then
+    sed -i "s|^ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=$KEY|" "$ENV"
+    echo "API key de Claude cargada: el agente usa Claude"
+  else
+    echo "Sin $SSM_PREFIX/anthropic-api-key: el agente corre en modo reglas"
+  fi
+fi
+
 FILES="-f docker-compose.yml -f docker-compose.ec2.yml"
 
 # Modo AWS: el CDK pasa IOT_THING e IOT_POLICY. La clave privada se genera acá y nunca sale de la EC2;
 # el rol de la instancia firma el certificado en IoT Core a partir del CSR.
 if [ -n "${IOT_THING:-}" ]; then
   echo "== IoT Core ($IOT_THING)"
-  export AWS_DEFAULT_REGION=${AWS_REGION:-us-east-1}
-  command -v aws >/dev/null || sudo snap install aws-cli --classic
   CERTS=$APP/certs
   if [ ! -f "$CERTS/device.pem.crt" ]; then
     mkdir -p "$CERTS"
@@ -86,6 +112,8 @@ MQTT_CA=/certs/AmazonRootCA1.pem
 MQTT_CERT=/certs/device.pem.crt
 MQTT_KEY=/certs/private.pem.key
 AWS_REGION=$AWS_DEFAULT_REGION
+IOT_THING=$IOT_THING
+IOT_POLICY=$IOT_POLICY
 EOF
   fi
   FILES="$FILES -f docker-compose.aws.yml"

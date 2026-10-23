@@ -12,5 +12,6 @@ new QmDemosStack(app, 'QmDemos', {
   branch: ctx('branch', 'main')!,
   setId: ctx('setId', 'SET-01')!,
   alertEmail: ctx('alertEmail'),
+  ssmPrefix: ctx('ssmPrefix', '/qm-demos')!,
   description: 'Demos de QM Equipment: EC2 con Docker, acceso por SSM',
 });

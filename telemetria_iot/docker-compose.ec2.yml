@@ -32,11 +32,12 @@ services:
       # Solo se publican las demos, nunca el resto del repo.
       - ../index.html:/srv/index.html:ro
       - ../nav.js:/srv/nav.js:ro
-      - ../1_calculadora_combustible.html:/srv/1_calculadora_combustible.html:ro
-      - ../2_canva_propuesta_demos.pdf:/srv/2_canva_propuesta_demos.pdf:ro
-      - ../3_configurador_bomba.html:/srv/3_configurador_bomba.html:ro
-      - ../3_configurador_assets:/srv/3_configurador_assets:ro
-      - ../4_dashboard_flota.html:/srv/4_dashboard_flota.html:ro
+      - ../calculadora_combustible.html:/srv/calculadora_combustible.html:ro
+      - ../propuesta_demos.pdf:/srv/propuesta_demos.pdf:ro
+      - ../configurador_bomba.html:/srv/configurador_bomba.html:ro
+      - ../configurador_assets:/srv/configurador_assets:ro
+      - ../dashboard_flota.html:/srv/dashboard_flota.html:ro
+      - ../infra/arquitectura.html:/srv/arquitectura.html:ro
       - caddy_data:/data
     depends_on: [api, grafana]
     deploy: { resources: { limits: { memory: 64m } } }

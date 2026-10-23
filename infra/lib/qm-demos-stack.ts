@@ -18,9 +18,10 @@ export interface QmDemosProps extends StackProps {
   branch: string;
   setId: string;          // set de fractura simulado; define el thing y los topics qm/{set}/...
   alertEmail?: string;    // si se pasa, crea un presupuesto de US$ 1 con aviso por mail
+  ssmPrefix: string;      // Parameter Store: <prefix>/anthropic-api-key (la carga el operador) y <prefix>/consola-password
 }
 
-const APP_DIR = path.join(__dirname, '..', '..', '5_telemetria_iot', 'app');
+const APP_DIR = path.join(__dirname, '..', '..', 'telemetria_iot', 'app');
 const LAMBDA_DEPS = '"psycopg[binary]==3.2.3"';
 
 /**
@@ -37,7 +38,7 @@ export class QmDemosStack extends Stack {
   constructor(scope: Construct, id: string, props: QmDemosProps) {
     super(scope, id, props);
     Tags.of(this).add('proyecto', 'qm-demos');
-    const { setId } = props;
+    const { setId, ssmPrefix } = props;
     const thingName = `datavan-${setId}`;
 
     // ── Red ────────────────────────────────────────────────────────────────────────────
@@ -101,6 +102,13 @@ export class QmDemosStack extends Stack {
       actions: ['iot:CreateCertificateFromCsr', 'iot:DescribeEndpoint', 'iot:AttachPolicy', 'iot:AttachThingPrincipal'],
       resources: ['*'],
     }));
+    // La API key de Claude la carga el operador como SecureString; la clave de la consola la guarda el setup.
+    const param = (n: string) => `arn:aws:ssm:${this.region}:${this.account}:parameter${ssmPrefix}/${n}`;
+    role.addToPolicy(new iam.PolicyStatement({
+      actions: ['ssm:GetParameter'],
+      resources: [param('anthropic-api-key'), param('consola-password')],
+    }));
+    role.addToPolicy(new iam.PolicyStatement({ actions: ['ssm:PutParameter'], resources: [param('consola-password')] }));
 
     const eip = new ec2.CfnEIP(this, 'Ip');
     const arm = /^[a-z]+\d+g/.test(props.instanceType); // t4g, m7g...
@@ -115,7 +123,7 @@ export class QmDemosStack extends Stack {
       'apt-get update -y && apt-get install -y git',
       `sudo -u ubuntu -i bash -c 'git clone -b ${props.branch} ${props.repoUrl} demo-qm'`,
       `sudo -u ubuntu -i env PUBLIC_IP=${eip.attrPublicIp} AWS_REGION=${this.region} ` +
-        `IOT_THING=${thingName} IOT_POLICY=${policy.policyName} bash demo-qm/deploy/setup-ec2.sh`,
+        `IOT_THING=${thingName} IOT_POLICY=${policy.policyName} SSM_PREFIX=${ssmPrefix} bash demo-qm/deploy/setup-ec2.sh`,
     );
 
     const instance = new ec2.Instance(this, 'Servidor', {
@@ -197,6 +205,10 @@ export class QmDemosStack extends Stack {
     new CfnOutput(this, 'InstanceId', { value: instance.instanceId });
     new CfnOutput(this, 'PublicIp', { value: eip.attrPublicIp });
     new CfnOutput(this, 'Shell', { value: `aws ssm start-session --target ${instance.instanceId}` });
+    new CfnOutput(this, 'Clave', {
+      value: `aws ssm get-parameter --with-decryption --name ${ssmPrefix}/consola-password --query Parameter.Value --output text`,
+      description: 'Contraseña de la consola y de Grafana (usuario qm)',
+    });
     new CfnOutput(this, 'IotThing', { value: thingName });
     new CfnOutput(this, 'QueueUrl', { value: queue.queueUrl });
     new CfnOutput(this, 'DlqUrl', { value: dlq.queueUrl });

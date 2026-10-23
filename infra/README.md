@@ -6,7 +6,7 @@ Levanta todas las demos y la ingesta de telemetría por IoT Core. La EC2, al arr
  data van (EC2) ─MQTT 8883, X.509─► IoT Core ─regla─► SQS (+ DLQ) ─► Lambda ingest ─► TimescaleDB (EC2)
 ```
 
-En local, el mismo camino corre en Docker con Mosquitto, ElasticMQ y el mismo handler de Lambda (ver `5_telemetria_iot/README.md`).
+En local, el mismo camino corre en Docker con Mosquitto, ElasticMQ y el mismo handler de Lambda (ver `telemetria_iot/README.md`).
 
 | Recurso | Para qué |
 |---|---|
@@ -19,16 +19,31 @@ En local, el mismo camino corre en Docker con Mosquitto, ElasticMQ y el mismo ha
 | Regla de IoT `qm/SET-01/{telemetria,eventos}` → SQS | Igual a `iot-rule` en local |
 | SQS `telemetria` + `telemetria-dlq` (5 intentos) | Amortigua si la base no responde |
 | Lambda `qm.lambda_ingest.handler` (Python 3.12, en la VPC) | Escribe en TimescaleDB por IP privada; el puerto 5432 solo acepta tráfico de la Lambda |
+| Parameter Store `/qm-demos/*` | La API key de Claude (la cargás vos) y la contraseña de la consola (la guarda la EC2) |
 | Presupuesto de US$ 1 (opcional) | Aviso por mail ante el primer gasto |
 
 ## Uso
 
+Para que el agente use Claude, cargar la API key antes del deploy (sin ella corre en modo reglas, sin costo). Conviene ponerle un tope de gasto a la key en la consola de Anthropic.
+
+```bash
+aws ssm put-parameter --profile qm --region us-east-1 --type SecureString \
+  --name /qm-demos/anthropic-api-key --value 'sk-ant-...'
+```
+
+La key no pasa por el repo ni por la plantilla de CloudFormation: la EC2 la lee al instalarse.
+
 ```bash
 npm install
 npx cdk bootstrap --profile qm                 # una sola vez por cuenta y región
-npx cdk deploy --profile qm                    # unos 3 minutos, más 5 a 10 de instalación dentro de la EC2
-npx cdk deploy --profile qm -c alertEmail=vos@mail.com -c instanceType=t3.micro
-npx cdk destroy --profile qm                   # borra todo
+npx cdk deploy --profile qm -c alertEmail=vos@mail.com   # unos 3 minutos, más 5 a 10 de instalación dentro de la EC2
+npx cdk destroy --profile qm                   # borra todo (los parámetros de /qm-demos quedan; se borran a mano)
+```
+
+Al terminar, los outputs traen la URL (`Url`) y el comando para leer la contraseña de la consola y de Grafana (`Clave`, usuario `qm`):
+
+```bash
+aws ssm get-parameter --profile qm --with-decryption --name /qm-demos/consola-password --query Parameter.Value --output text
 ```
 
 Para entrar al servidor sin SSH (requiere el Session Manager plugin):
@@ -38,6 +53,12 @@ aws ssm start-session --target <InstanceId> --profile qm
 ```
 
 Para ver cómo va la instalación: `sudo tail -f /var/log/cloud-init-output.log`.
+
+Para actualizar después de un push, o para tomar una API key cargada después del deploy (el script se acuerda del modo AWS):
+
+```bash
+sudo -iu ubuntu bash -c 'cd demo-qm && git pull && bash deploy/setup-ec2.sh'
+```
 
 ## Costos
 
