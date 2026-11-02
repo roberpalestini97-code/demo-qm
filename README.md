@@ -12,9 +12,12 @@ Prototipos para QM Equipment, hechos por Rober Palestini. Es una demo independie
 
 Las demos 1 a 3 son archivos HTML sueltos: se abren directo en el navegador. `index.html` y `nav.js` las enlazan entre sí cuando se sirven juntas.
 
-## Desplegar en AWS
+## Desplegar
 
-Con CDK: ver [infra/README.md](infra/README.md). Crea la EC2, la red y el acceso por SSM, y la instancia se instala sola al arrancar.
+Hay dos despliegues, y la guía completa de ambos (inicialización y paso a paso) está en [README-prod.md](README-prod.md):
+
+- **GitHub Pages** (demos estáticas): el workflow [`.github/workflows/pages.yml`](.github/workflows/pages.yml) publica el sitio en cada push a `main`, sin backend ni costo. La consola y Grafana quedan como avisos que explican cómo levantarlas.
+- **AWS con CDK** (telemetría completa): ver [infra/README.md](infra/README.md). Crea la EC2, la red y el acceso por SSM, y la instancia se instala sola al arrancar.
 
 A mano, en cualquier Ubuntu 24.04 con los puertos 80 y 443 abiertos:
 
